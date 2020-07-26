@@ -9,23 +9,27 @@ def get_play_list():
     return ps.get_play_list_ps()
 
 
-def __init__enemy(length_x, length_y):
+def __init__enemy(length_x, length_y, ship_coordinates, difficulty):
     ps.__init__player_smart(length_x, length_y)
     # initialisiert den Gegner und eine Kontrollliste, um doppelte Eingaben zu vermeiden
     global hit_list
     global known_hits
-    global done_plays
-    done_plays = [[2, 2]]
+    global shots
+    shots = [[2, 2]]
+
     hit_list = []
     for x in range(10):
         hit_list.append([])
         for y in range(10):
             hit_list[x].append(0)
+
     known_hits = []
     for x in range(10):
         known_hits.append([])
         for y in range(10):
             known_hits[x].append(0)
+
+    create_moves_enemy(difficulty=difficulty, field_count=(length_x, length_y), ship_coordinates=ship_coordinates)
 
 
 def _enemy_medium(hit, ship_number, destroyed):
@@ -35,72 +39,88 @@ def _enemy_medium(hit, ship_number, destroyed):
     return shot[0], shot[1]
 
 
-def do_enemy_move(rule, hit, ship_number, destroyed, dif, ship_count, ship_coordinates):
-    """fuehrt den Zug des computergegners aus"""
-    # TODO Regeln
-    # TODO Variablennamen
-    # ueberprueft die regeln, um festzustellen, wie viele Zuege erlaubt sind
-    if rule == 1:
-        hi = 1
-    elif rule == 2:
-        hi = 1
-    elif rule == 3:
-        hi = ship_count
-    else:
-        hi = 0
-    x = 0
-    # fuehrt diese Anzahl der Zuege aus
-    while x < hi:
-        x += 1
-        # Schwierigkeit ueberpruefen, um den Zug je nach Schwierigkeit zu bestimmen
-        if dif == "easy":
-            hit = _enemy_easy()
-        elif dif == "medium":
-            hit = _enemy_medium(hit, ship_number, destroyed)
-        elif dif == "impossible":
-            hit = _enemy_impossible(ship_coordinates)
-        if rule == 2:
-            # bei Wechsel des Spielers nach nicht getroffenem Schiff, wird ueberprueft, ob Schiff getroffen und
-            # dementsprechend Schleife beendet oder auch nicht
-            pass
-    return hit
+def _enemy_easy(field_count):
+    """
+    adds the enemy's moves to shots
+
+    takes random fields and puts them in the shots list, until all fields can be found in the shot list so that no
+        matter when the last ship is destroyed, there will be a move to do so
+
+    the shots list is later filled with all shots needed for hte enemy to play the game,
+        and the shots will then be played from [0] to [-1]
+
+    :param field_count: list[int, int]; size of one playfield in small fields
+    """
+    field_count_x, field_count_y = field_count
+    xcoord, ycoord = ("x", "y")
+
+    while shots.__len__() < (field_count_y * field_count_x + 1):
+        field_selected = False
+        # selects a random field, that wasn't selected before
+        while not field_selected:
+            field_selected = True
+            # selects a random field
+            xcoord = rd.randint(0, 9)
+            ycoord = rd.randint(0, 9)
+            if hit_list[xcoord][ycoord] == 1:  # checks, whether that field was already selected before
+                field_selected = False
+
+        hit_list[xcoord][ycoord] = 1  # refreshes checklist
+        shots.append([xcoord, ycoord][:])  # adds that field to the shots list
+
+
+def _enemy_impossible(ship_coordinates):
+    """
+    adds the enemies moves to shots
+
+    adds all coordiantes an allied ship is placed on to the list shots
+
+    the shots list is later filled with all shots needed for hte enemy to play the game,
+        and the shots will then be played from [0] to [-1]
+
+    :param ship_coordinates: list[list[int, int], list, ...]; coordinates of allied ship parts
+    """
+    for ship_coordinate in ship_coordinates:  # geos through the coordiantes a ship is placed on
+        hit_list[ship_coordinate[0]][ship_coordinate[1]] = 1  # refreshes checklist
+        shots.append([ship_coordinate[0], ship_coordinate[1]])  # # adds that field to the shots list
+
+
+def create_moves_enemy(difficulty, field_count, ship_coordinates):
+    """"""
+    if difficulty == "easy":
+        _enemy_easy(field_count)
+
+    elif difficulty == "medium":
+        # TODO medium difficulty
+        _enemy_medium()
+
+    elif difficulty == "impossible":
+        _enemy_impossible(ship_coordinates)
+
+
+def get_enemy_move():
+    """
+    returns the next move of the enemy
+
+    also returns the last move of the nemy and deletes it from shots
+
+    the shots list is later filled with all shots needed for hte enemy to play the game,
+        and the shots will then be played from [0] to [-1]
+
+    :return: list[int, int, list[int, int]]; enemies last move, enemies next move
+    """
+    try:
+        shot = shots[1]  # gets the next shot of the enemy
+    except IndexError:
+        shot = [2, 2]
+    oldx, oldy = shots[0]  # gets the last shot of the enemy
+    del shots[0]  # deletes it
+    return oldx, oldy, shot  # returns both shots
 
 
 def get_random_field(length_x, length_y):
     rand_field = ps.add_random_target(length_x, length_y)
     return rand_field
-
-
-def _enemy_easy():
-    """bestimmtden zufaellig den Zug, wenn die Schwierigkeit einfach gewaehlt wurde"""
-    # TODO Vraiablennamen
-    x, y = ("x", "y")
-    hi = True
-    while hi:
-        # zufaelligen Wert waehlen
-        hi = False
-        x = rd.randint(0, 9)
-        y = rd.randint(0, 9)
-        # ueberpruefen, ob Feld bereits getroffen wurde
-        if hit_list[x][y] == 1:
-            hi = True
-    # Checkliste aktualisieren
-    hit_list[x][y] = 1
-    done_plays.append([x, y])
-    return x, y
-
-
-def _enemy_impossible(ship_coordinates):
-    """bestimmt den gegnerischen Zug aufgrund der dem Computer bereits bekannten Positionen der Schiffe"""
-    for ship_coordinate in ship_coordinates:
-        if hit_list[ship_coordinate[0]][ship_coordinate[1]] == 0:
-            hit_list[ship_coordinate[0]][ship_coordinate[1]] = 1
-            done_plays.append([ship_coordinate[0], ship_coordinate[1]])
-            return ship_coordinate[0], ship_coordinate[1]
-
-
-def get_last_play(zug):
-    return done_plays[zug]
 
 
 def get_hit_list_enemy():
