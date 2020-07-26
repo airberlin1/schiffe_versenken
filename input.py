@@ -113,11 +113,12 @@ def get_button_start_mouse(xcoord, ycoord, field_size, start_buttons):
     button_boundaries = _get_button_boundaries(start_buttons)  # gets the boundarios of the active buttons
 
     count = 1  # creates a counter that counts the active buttons
-    for boundaries in button_boundaries:  # goes through the buttons
-        # checks, whether that button was clicked
-        if boundaries[0][0] <= square[0] <= boundaries[0][1] and boundaries[1][0] <= square[1] <= boundaries[1][1]:
-            return count  # returns the button's number
-        count += 1  # adds 1
+    if square:
+        for boundaries in button_boundaries:  # goes through the buttons
+            # checks, whether that button was clicked
+            if boundaries[0][0] <= square[0] <= boundaries[0][1] and boundaries[1][0] <= square[1] <= boundaries[1][1]:
+                return count  # returns the button's number
+            count += 1  # adds 1
 
     return False  # returns False if no button was clicked
 
@@ -133,18 +134,19 @@ def get_button_ingame_mouse(xcoord, ycoord, field_size, end_buttons):
     """
     square = _get_square_mouse(xcoord, ycoord, field_size)  # gets the clicked field
 
-    # returns a field, if a field on the playfield was clicked
-    if 0 <= square[0] <= 9 and 0 <= square[1] <= 9:
-        return "field", square[0], square[1]
+    if square:
+        # returns a field, if a field on the playfield was clicked
+        if -1 < square[0] < 10 and -1 < square[1] < 10:
+            return "field", square[0], square[1]
 
-    button_boundaries = _get_button_boundaries(end_buttons)  # gets the boundaries of the active buttons
+        button_boundaries = _get_button_boundaries(end_buttons)  # gets the boundaries of the active buttons
 
-    count = 0  # creates a counter that counts the active buttons
-    for boundaries in button_boundaries:  # goes through the buttons
-        # checks, whether that button was clicked
-        if boundaries[0][0] <= square[0] <= boundaries[0][1] and boundaries[1][0] <= square[1] <= boundaries[1][1]:
-            return "button", end_button_dic[count]  # returns that button
-        count += 1  # adds 1
+        count = 0  # creates a counter that counts the active buttons
+        for boundaries in button_boundaries:  # goes through the buttons
+            # checks, whether that button was clicked
+            if boundaries[0][0] <= square[0] <= boundaries[0][1] and boundaries[1][0] <= square[1] <= boundaries[1][1]:
+                return "button", end_button_dic[count]  # returns that button
+            count += 1  # adds 1
 
     return False  # returns False if no button was clicked
 
