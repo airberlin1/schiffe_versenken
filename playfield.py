@@ -164,10 +164,11 @@ class SmallField:
             pygame.draw.line(screen, color, (self.location_coord_x, self.location_coord_y),
                              (self.location_coord_x + field_size, self.location_coord_y + field_size), 5)
 
-    def become_hit_player(self):
+    def become_hit_player(self, resource_path, sound_volume):
         """
         das kleine Feld wird getroffen
-        :return: nothing
+        :param resource_path: Func; returns the resource path to a relative path
+        :param sound_volume: float; volume of sounds
         """
         if self.hit_on:  # ueberprueft, ob das Feld bereits zuvor getroffen wurde
             self.clicked_on = False  # entklickt das Feld
@@ -175,16 +176,19 @@ class SmallField:
         elif self.clicked_on:
             self.clicked_on = False  # entklickt das Feld
             self.hit_on = True  # setzt das Feld als getroffen
-            # TODO sound einfuegen
+            new_channel = pygame.mixer.Channel(0)
+            sound = pygame.mixer.Sound(resource_path("assets/sounds/nothit.wav"))
+            sound.set_volume(sound_volume)
+            new_channel.play(sound)
 
         else:
             self.clicked_on = True  # klickt das Feld an
-            # TODO sound einfuegen
+        print(self.location_field_x, self.location_field_y)
+        print(self.clicked_on, self.hit_on)
 
     def become_hit_enemy(self):
         """
         das kleine Feld wird getroffen
-        :return: nothing
         """
         self.hit_on = True  # trifft das Feld
         self.clicked_on = True  # klickt das Feld an
@@ -371,28 +375,25 @@ def __init__playfield(orienation, field_size, field_count_x, field_count_y):
 
 # -------
 # erneuert die Koordinaten der Spielfelder und andere Attribute
-def refresh_loc_small_fields(field_size, orienation):
+def refresh_loc_small_fields(field_size, orientation):
     """
     setzt die Koordinaten der kleinen Felder neu, noetig wenn die Oberflaeche veraendert wird
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :param orienation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param orientation: str; width/height, depending on what is bigger
     :return: nothing
     """
     # geht durch alle kleinen Spielfelder durch
     for z in range(2):
         for i in range(big_fields[z].field_count_x):
             for j in range(big_fields[z].field_count_y):
-                small_fields[z][i][j].change_loc_coords(field_size, orienation)  # aendert die Koordinaten des Felds
+                small_fields[z][i][j].change_loc_coords(field_size, orientation)  # aendert die Koordinaten des Felds
 
 
 def refresh_loc_big_fields(field_size, orientation):
     """
     setzt die Koordinaten der Spielfelder neu, noetig wenn die Oberflaeche veraendert wird
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :param orientation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
-    :return: nothing
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param orientation: str; width/height, depending on what is bigger
     """
     for i in range(2):
         if i == 0:  # Ueberprueft die Nummer des Spielfeldes, wobei 0 das gegnerische und 1 das eigene ist
@@ -409,8 +410,8 @@ def refresh_loc_big_fields(field_size, orientation):
 def refresh_loc_writings(field_size, orientation):
     """
     refreshes the coordinates of the writings
-    :param field_size: int; size of a virtual field, depending on size of the playfield and the size of the window
-    :param orientation: str; width or height depending on the size and appearance of the window
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param orientation: str; width/height, depending on what is bigger
     :return: nothing
     """
     for writing_local in playfield_writings:  # goes through every writing
@@ -451,23 +452,27 @@ def draw_playfield(screen, field_size, zustand):
             writing_local.draw(screen)
 
 
-def hit_small_field(player, field_coord_x, field_coord_y, old_field_coord_x=-1, old_field_coord_y=-1):
+def hit_small_field(player, field_coord_x, field_coord_y, resource_path, sound_volume, old_field_coord_x=-1,
+                    old_field_coord_y=-1):
     """
-    trifft ein kleines Feld
-    :param player: int; Gegenteil des aktuellen Spielers
-    :param field_coord_x: int; x-Koordiante des kleinen Felds
-    :param field_coord_y: int; y-Koordiante des kleinen Felds
-    :param old_field_coord_x: int; x-Koordiante des kleinen Felds, das zuvor getroffen wurde
-    :param old_field_coord_y: int; y-Koordiante des kleinen Felds, das zuvor getroffen wurde
-    :return: nothing
+    hits a small field by marking it with an x and playing a sound while also displaying,
+     whether a ship is on that field or not
+
+    :param player: int; opposite of the player currently playing
+    :param field_coord_x: int; x coordiante of the small field that is hit
+    :param field_coord_y: int; y coordiante of the small field that is hit
+    :param resource_path: Func; creates the resource path to a relative path
+    :param sound_volume: float; 0 - 1, volume of sounds
+    :param old_field_coord_x: int; x coordiante of the small field that was hit before
+    :param old_field_coord_y: int; y coordiante of the small field that was hit before
     """
-    if player == 1:  # uberorueft, welcher Spieler am Zug ist
-        # trifft das Feld als Spieler
-        small_fields[1 - player][field_coord_x][field_coord_y].become_hit_player()
+    if player == 1:  # checks which player is currently playing
+        # hits the field as a player
+        small_fields[1 - player][field_coord_x][field_coord_y].become_hit_player(resource_path, sound_volume)
     else:
-        # entklickt das zuvor getroffene Feld
+        # unclicks the previously hit field
         small_fields[1 - player][old_field_coord_x][old_field_coord_y].clicked_on = False
-        # trifft das Feld als Gegner
+        # hits the field as an enemy
         small_fields[1 - player][field_coord_x][field_coord_y].become_hit_enemy()
 
 

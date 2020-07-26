@@ -7,7 +7,6 @@
 def __init__player():
     """
     iniatialisiert den spieler und Kontrollisten, um doppelte Eingabe zu vermeiden
-    :return: nothing
     """
     global hit_list
     global feld
