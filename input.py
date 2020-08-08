@@ -33,7 +33,8 @@ key_dict_letters_digits = {
 # dictionary used to convert the order of end_buttons into their use
 end_button_dic = {
     0: "end",
-    1: "settings"
+    1: "settings",
+    2: "save"
 }
 
 
@@ -42,7 +43,6 @@ end_button_dic = {
 def __init__input():
     """
     initializes the module input
-    :return: nothing
     """
     global key_list
     key_list = []  # creates an empty list, where keys of a selcted field are stored
@@ -91,7 +91,7 @@ def _get_button_boundaries(button_list):
     """
     button_boundaries = []  # creates an empty list
     for button in button_list:  # goes through the buttons of the button_list
-        if button.active:  # checks, whether the button is currently active
+        if button.active or button.number > 199:  # checks, whether the button is currently active
             button_coords = button.field_coords  # gets the button's coordinates
             boundary_x_small, boundary_y_small = button_coords[0]  # sets the first coordiante
             boundary_x_big, boundary_y_big = button_coords[-1]  # sets the last coordinate
