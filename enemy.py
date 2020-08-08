@@ -1,6 +1,8 @@
 # import fixed
 import random as rd
-import player_smart as ps
+import enemy_medium as em
+import save
+import chat
 # TODO Modul sortieren
 # TODO kommentieren
 
@@ -9,34 +11,35 @@ def get_play_list():
     return ps.get_play_list_ps()
 
 
-def __init__enemy(length_x, length_y, ship_coordinates, difficulty):
-    ps.__init__player_smart(length_x, length_y)
-    # initialisiert den Gegner und eine Kontrollliste, um doppelte Eingaben zu vermeiden
+def __init__enemy(load, language, resource_path, length_x, length_y, ship_coordinates, difficulty, ships):
     global hit_list
     global known_hits
     global shots
-    shots = [[2, 2]]
+    if load:
+        try:
+            shots = save.load('lis', 'enemy', 1, resource_path)
+        except FileNotFoundError:
+            chat.add_missing_message("enemy1.lis", resource_path("saves/"), language)
+            return True
+    else:
+        # initialisiert den Gegner und eine Kontrollliste, um doppelte Eingaben zu vermeiden
 
-    hit_list = []
-    for x in range(10):
-        hit_list.append([])
-        for y in range(10):
-            hit_list[x].append(0)
+        shots = [[2, 2]]
 
-    known_hits = []
-    for x in range(10):
-        known_hits.append([])
-        for y in range(10):
-            known_hits[x].append(0)
+        hit_list = []
+        for x in range(10):
+            hit_list.append([])
+            for y in range(10):
+                hit_list[x].append(0)
 
-    create_moves_enemy(difficulty=difficulty, field_count=(length_x, length_y), ship_coordinates=ship_coordinates)
+        known_hits = []
+        for x in range(10):
+            known_hits.append([])
+            for y in range(10):
+                known_hits[x].append(0)
 
-
-def _enemy_medium(hit, ship_number, destroyed):
-    shot = ps.do_shot(hit, ship_number, destroyed)
-    hit_list[shot[0]][shot[1]] = 1
-    done_plays.append([shot[0], shot[1]])
-    return shot[0], shot[1]
+        create_moves_enemy(difficulty=difficulty, field_count=(length_x, length_y), ship_coordinates=ship_coordinates,
+                           ships=ships)
 
 
 def _enemy_easy(field_count):
@@ -85,14 +88,17 @@ def _enemy_impossible(ship_coordinates):
         shots.append([ship_coordinate[0], ship_coordinate[1]])  # # adds that field to the shots list
 
 
-def create_moves_enemy(difficulty, field_count, ship_coordinates):
+def create_moves_enemy(difficulty, field_count, ship_coordinates, ships):
     """"""
+    global shots
     if difficulty == "easy":
         _enemy_easy(field_count)
 
     elif difficulty == "medium":
-        # TODO medium difficulty
-        _enemy_medium()
+        shots += em.enemy_medium(ships, field_count)
+
+    elif difficulty == "hard":
+        shots += em.enemy_hard()  # TODO implement hard enemy
 
     elif difficulty == "impossible":
         _enemy_impossible(ship_coordinates)
@@ -126,3 +132,11 @@ def get_random_field(length_x, length_y):
 def get_hit_list_enemy():
     # gibt die Liste der bereits beschossenen Felder zurueck
     return hit_list
+
+
+def save_enemy(resource_path, language):
+    # saves remaining enemy moves for this game
+    try:
+        save.save(shots, 'lis', 'enemy', 1, resource_path)
+    except FileNotFoundError:
+        chat.add_missing_message("", resource_path("saves/"), language, False)
