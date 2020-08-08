@@ -1,25 +1,23 @@
-# commented, partly german
-# Modul, in dem sich die Knoepfe befinden, wobei hier sowohl deren Koordinaten als auch die Ausgabe vorhanden sind
-# TODO Sprachen aendern ermoeglichen
+"""module containing buttons and their content, displaying themselves"""
 # TODO Sprachen mit Flaggen kennzeichenen
-# TODO Luecke entfernen
 # ------
-# importiert pygame, das zur Ausgabe der Knoepfe genutzt wird und die Schrift
+# imports pygame and the writing to display buttons and writings
+from writing import Writing
+from translation import get_dict
 import pygame
-import writing
+
 
 # -------
-# die Liste mit den Knopfbeschriftungen auf Deutsch
-# Dabei sind in der obersten Reihe die Beschriftungen für den ersten Knopf zu finden, in der zweiten die des zweiten etc
-# Die Spalten sind so organisiert, dass eine Spalte jeweils gleichzeitig zu sehen ist
+# list with buttons' contents
+# one whole row is shown simultaniously from top to bottom
 intention_list = [
-        ["Start",             "Leicht",     "Vollbild",    "Ozean",      "Deutsch", "Zurueck", None, "Zurueck", "Normal"],
-        ["Schwierigkeit",     "Mittel",     "Fenster",     "Weltall",    "English", None, None, None, "Kontrast"],
+        ["Start", "Leicht", "Vollbild", "Ozean", "Deutsch", "Zurueck", None, "Zurueck", "Normal"],
+        ["Schwierigkeit", "Mittel", "Fenster", "Weltall", "English", None, None, None, "Kontrast"],
         ["Bildeinstellungen", "Unmoeglich", "Hintergrund", "Gezeichnet", "Latinum", None, None, None, "Weihnachten"],
-        ["Sprache",           "Zurueck",    "Theme",     "Zurueck",    "Zurueck", None, None, None, "Zurueck"],
+        ["Sprache", "Zurueck", "Theme", "Zurueck", "Zurueck", None, None, None, "Zurueck"],
         ["Hilfe", None, "Zurueck"],
         ["Beenden"]
-    ]
+]
 intention_list_settings = [
     ["Weiter",            None, "Vollbild",    "Ozean",      "Deutsch", "Zurueck", None, "Zurueck", "Normal"],
     ["Bildeinstellungen", None, "Fenster",     "Weltall",    "English", None, None, None, "Kontrast"],
@@ -28,113 +26,6 @@ intention_list_settings = [
     ["Lautstärke",  None, "Zurueck"],
     ["Aufgeben"]
 ]
-
-# -------
-# Die Uebersetzungen fuer die Knoepfe in verschiedene Sprachen
-# auf Englisch
-intention_dict_english = {
-    "Theme": "Theme",
-    "Normal": "Default",
-    "Kontrast": "Contrast",
-    "Weihnachten": "Christmas",
-    "Lautstärke": "Volume",
-    "Weiter": "Continue",
-    "Start": "Start",
-    "Leicht": "Easy",
-    "Vollbild": "Fullscreen",
-    "Abwechselnd schießen": "one shot each turn",
-    "Zurueck": "Back",
-    "Schwierigkeit": "Difficulty",
-    "Mittel": "Medium",
-    "Fenster": "Window",
-    "Fehlschuss wechseln": "shoot until miss",
-    "Bildeinstellungen": "Screen",
-    "Unmoeglich": "Impossible",
-    "Ozean": "Ocean",
-    "Anzahl der Schiffe": "Number of ships determines shots",
-    "Regeln": "Rules",
-    "Weltall": "Space",
-    "Hilfe": "Help",
-    "Gezeichnet": "Drawn",
-    "Beenden": "Close",
-    "Hintergrund": "Background",
-    "Sprache": "Language",
-    "Deutsch": "Deutsch",
-    "English": "English",
-    "Latinum": "Latinum",
-    "Aufgeben": "Give Up",
-    None: None
-}
-# auf Deutsch
-intention_dict_german = {
-    "Theme": "Thema",
-    "Normal": "Standard",
-    "Kontrast": "Kontrast",
-    "Weihnachten": "Weihanchten",
-    "Lautstärke": "Ton",
-    "Weiter": "Fortsetzen",
-    "Start": "Start",
-    "Leicht": "Leicht",
-    "Vollbild": "Vollbild",
-    "Abwechselnd schießen": "Abwechselnd",
-    "Zurueck": "Zurück",
-    "Schwierigkeit": "Schwierigkeit",
-    "Mittel": "Mittel",
-    "Fenster": "Fenster",
-    "Fehlschuss wechseln": "Fehlschuss",
-    "Bildeinstellungen": "Bild",
-    "Unmoeglich": "Unmöglich",
-    "Ozean": "Ozean",
-    "Anzahl der Schiffe": "Schiffanzahl",
-    "Regeln": "Regeln",
-    "Weltall": "Weltall",
-    "Hilfe": "Hilfe",
-    "Gezeichnet": "Gezeichnet",
-    "Beenden": "Beenden",
-    "Hintergrund": "Hintergrund",
-    "Sprache": "Sprache",
-    "Deutsch": "Deutsch",
-    "English": "English",
-    "Latinum": "Latinum",
-    "Aufgeben": "Aufgeben",
-    None: None
-}
-# auf Latein
-intention_dict_latin = {
-    "Theme": "Color",
-    "Normal": "Norma",
-    "Kontrast": "Diversitas",
-    "Weihnachten": "Festum",
-    "Lautstärke": "Sonus",
-    "Weiter": "Persevero",
-    "Start": "Initium",
-    "Leicht": "Facilis",
-    "Vollbild": "Nullus fenestra",
-    "Abwechselnd schießen": "Per vices",
-    "Zurueck": "Retro",
-    "Schwierigkeit": "Difficultas",
-    "Mittel": "Difficilis",
-    "Fenster": "Fenestra",
-    "Fehlschuss wechseln": "Percutere",
-    "Bildeinstellungen": "Facies",
-    "Unmoeglich": "Non potes",
-    "Ozean": "Oceanus",
-    "Anzahl der Schiffe": "Numerus navis",
-    "Regeln": "Regulae",
-    "Weltall": "Universum",
-    "Hilfe": "Auxilium",
-    "Gezeichnet": "Delineatus",
-    "Beenden": "Termino",
-    "Hintergrund": "Facies",
-    "Sprache": "Lingua",
-    "Deutsch": "Deutsch",
-    "English": "English",
-    "Latinum": "Latinum",
-    "Aufgeben": "Excedo",
-    None: None
-}
-# auf Spanisch
-# Hinweis: noch nicht vorhanden, weitere moegliche Sprachen: andere Sprache, Franzoesisch, Daenisch etc
 
 
 # -------
@@ -145,18 +36,18 @@ class Button:
     def __init__(self, location_top_left, size_x, size_y, field_size_x, field_size_y, field_coords, intention,
                  liste, active, color_local, number):
         """
-        initialisiert den jeweiligen Knopf
-        :param location_top_left: list[int, int]; Koordinaten der oberen linken Ecke des Knopfes
-        :param size_x: int; die Groesse des Knopfes in die Breite
-        :param size_y: int; die Groesse des Knopfes in die Hoehe
-        :param field_size_x: int; die Anzahl der Felder, die in den Knopf in der Breite passen
-        :param field_size_y: int; die Anzahl der Felder, die in den Knopf in der Hoehe passen
-        :param field_coords: list[list[int, int], list,...]; alle Felder, auf denen sich der Knopf befindet
-        :param intention: str; Beschriftung des Knopfs, welche gleichzeitig auch den Sinn des Knopfes darstellt
-        :param liste: str; Liste, in der sich dieser Knopf befindet
-        :param active: bool; gibt an, ob der Knopf gerade ausgegeben wird oder nicht
-        :param color_local: tuple(int, int, int); Farbe des Knopfes
-        :param number: Nummer des Knopfes, die bei den Stratknoepfen relevant ist
+        :param location_top_left: list[int, int]; top left corner's coordiantes
+        :param size_x: float; horizontal size of button
+        :param size_y: float; vertical size of button
+        :param field_size_x: int; horizontal size of button in quantity of fields
+        :param field_size_y: int; vertical size of button in quantity of fields
+        :param field_coords: list[list[int, int], list,...]; field coordaintes the button is on,
+         used to recognize clicks on it
+        :param intention: str; intention and text on button that is translated
+        :param liste: str; lsit the button is in
+        :param active: bool; button is displayed
+        :param color_local: tuple(int, int, int); color the button's background is dispalyed in
+        :param number: numberused to differ between buttons
         """
         self.location_top_left = location_top_left
         self.size_x = size_x
@@ -172,113 +63,97 @@ class Button:
 
     def change_loc_coords(self, field_size):
         """
-        aendert die Koordinaten der Knoepfe, was bei Veraenderung der Oberflaeche benoetigt wird
-        :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
+        updates button's coordinates, used when changes to the window are made
+        :param field_size: float; size of a virtual field
+         that is determined by the size of the window that inhabits the GUI
         """
-        # ueberprueft die Oberflaechenausrichtung und setzt ggf. eine Koordinate weiter hoch, da die Luecke zwischen den
-        # beiden Spielfeldern nicht als eigenes feld gezaelht wird
+        # gets the top left field coordiante
         fieldcoord_top_left = self.field_coords[0]
-        # setzt die neue obere Linke Ecke des Knopfes
+        # calculates new coordiante for top left corner
         self.location_top_left = [int((fieldcoord_top_left[0] + (3 / 2)) * field_size),
                                   int((fieldcoord_top_left[1] + (3 / 2)) * field_size)]
-        # setzt die Groesse des Knopfes neu
+        # updates button's size
         self.size_x = self.field_size_x * field_size
         self.size_y = self.field_size_y * field_size
 
-    def change_active(self):
-        """
-        aendert, ob der Knopf angezeigt wird, oder nicht
-        :return: nothing
-        """
-        if self.active:
-            self.active = False
-        else:
-            self.active = True
-
     def get_active_end_b(self, orientation):
         """
-        bestimmt, ob der Knopf aktiv ist, je nach Ausrichtung der Oberflaeche und des Knopfes
-        :param orientation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
-        :return: bool; ob der Knopf aktiv ist
+        gets whether in game button is displayed
+        :param orientation: str; width/height depending on what is bigger
+        :return: bool; whether button is displayed
         """
-        # ueberprueft Bildschirmausrichtung
         if orientation == "height":
-            # da der erste Knopf bei einer hochkanten Ausrichtung aktiv sein soll,
-            # wird in diesem Fall fuer den ersten True zurueckgegeben, und fuer den zweiten False
-            if self.number == 101 or self.number == 103:
+            # first button is not displayed, second is
+            if self.number % 2 == 1:
                 return True
             else:
                 return False
         else:
-            # da der zweite Knopf bei einer nicht hochkanten Ausrichtung aktiv sein soll, wird in diesem Fall fuer den
-            # zweiten True zurueckgegeben, und fuer den ersten False
-            if self.number == 100 or self.number == 102:
+            # first button is displayed, second is not
+            if self.number % 2 == 0:
                 return True
             else:
                 return False
 
     def change_intention(self, task_number, orientation, zustand):
         """
-        changes the use of a button
+        changes whether a button is displayed and also updates its intention
         :param task_number: int; number of the task the menu has to fulfill
         :param orientation: str; width/height, depending on what is bigger
         :param zustand: str; start/ingame/settings, what the program is currently doing
         """
-        # ueberprueft, ob Knopf kein Startknopf ist
-        if self.number > 98:
-            # ueberprueft, ob das Spiel bereits gespielt wird
-            if task_number == 6:
-                # setzt den Knopf auf aktiv, falls er der Knopf der Endknoepfe ist, der zu sehen sein soll
+        if self.number > 98:  # button is not a start button
+            if task_number == 6:  # program is currently in game
+                # only half of end buttons are displayed depending on orientation
                 self.active = self.get_active_end_b(orientation)
             else:
-                # setzt den Knopf auf inaktiv, falls keiner der Endknoepfe benoetigt wird
-                self.active = False
-        # setzt den Zweck des Startknopfes neu, wenn das Spiel sich noch am Start befindet
-        elif task_number != 6:
+                self.active = False  # no in game button is displayed while not in game
+
+        elif task_number != 6:  # program is at start or in settings
             try:
-                # setzt die Intetntion des Knopfes neu, nach der eigenen Nummer und der Nummer der aktuellen Aufgabe
-                if zustand == "start":
+                # updates buttons intention
+                if zustand == "start":  # program is at start
+                    # gets intention from list
                     self.intention = intention_list[self.number][task_number]
-                elif zustand == "settings":
+                elif zustand == "settings":  # program is in settings
+                    # gets intention from list
                     self.intention = intention_list_settings[self.number][task_number]
-                # wenn sich hier nichts befindet, wird der Knopf auf inaktiv gesetzt, ansonsten auf aktiv
-                if self.intention is None:
-                    self.active = False
+                if self.intention is None:  # no intention for this button at this moment
+                    self.active = False  # button is not displayed
                 else:
-                    self.active = True
+                    self.active = True  # button is displayed
+
             except IndexError:
-                # wenn sich hier nichts befindet, wird der Knopf auf inaktiv gesetzt, ansonsten auf aktiv
+                # no intention so that button is not displayed
                 self.intention = None
                 self.active = False
-        else:
-            # wenn das Spiel bereits gespielt wrid, wird der Startknopf auf inaktiv gesetzt
+
+        else:  # game is in game and button is start button
+            # button is not displayed
             self.intention = None
             self.active = False
 
     def draw(self, screen):
         """
-        gibt den Knopf auf dem Bildschirm aus
-        :param screen: Surface; die Oberflaeche, auf der alles zu sehen ist
-        :return: nothing
+        displays button in the game window
+        :param screen: Surface; surface covering whole window
         """
         pygame.draw.rect(screen, self.color,
                          (self.location_top_left[0], self.location_top_left[1], self.size_x, self.size_y), 0)
 
 
-class ButtonWriting(writing.Writing):
-    """Schrift auf den Knoepfen"""
+class ButtonWriting(Writing):
+    """writing on buttons displaying itself on button's center and getting content from button's intention"""
 
     def __init__(self, content, font, color_local, top_left_corner, button, background, active):
         """
-        initialisiert die Schrift
-        :param content: str; Inhalt der Schrift
-        :param font: SysFont; Schrift
-        :param color_local: tuple(int, int, int); Farbe der Schrift
-        :param top_left_corner: list[int, int]; Koordinaten der oberen linken Ecke der Schrift
-        :param button: Button; zugehoeriger Knopf
-        :param background: tuple(int, int, int); Hintergrundfarbe der Schrift
-        :param active: bool; gibt an, ob die Schrift gerade ausgegeben wird oder nicht
+        :param content: str; dispalyed text
+        :param font: SysFont; font the text is dispalyed in
+        :param color_local: tuple(int, int, int); writing's color
+        :param top_left_corner: list[int, int]; coordiantes of writing's center
+        :param button: Button; button the writing is on
+        :param background: tuple(int, int, int); writing's background's color, usually None
+        :param active: bool; writing is currently displayed
         """
         super().__init__(content, font, color_local, top_left_corner, background)  # initializes the writing
         self.button = button
@@ -286,116 +161,33 @@ class ButtonWriting(writing.Writing):
 
     def change_loc_coords(self, field_size):
         """
-        aendert die obere linke Ecke und die Groesse der Schrift
-        :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
+        refreshes writing's size and center
+        :param field_size: float; size of one virtual field
+         that is determined by the size of the window that inhabits the GUI
         """
-        self.top_left_corner = _get_top_left_corner_writing(self.button, field_size)  # setzt die obere linke Ecke neu
-        font_size = int(field_size * 2)  # berechnet die Groesse der Schrift neu
-        self.font = pygame.font.SysFont(None, font_size)  # setzt die Schrift neu
+        self.top_left_corner = _get_center_writing(self.button)  # sets new center
+        font_size = int(field_size * 2)  # resizes font
+        self.font = pygame.font.SysFont(None, font_size)  # updates font
 
     def refresh_content(self, language):
         """
-        erneuert den Inhalt der Schrift, und, ob die Schrift aktiv ist
-        :param language: str; aktuelle Sprache, in der der text ausgegeben wird
-        :return: nothing
+        updates content of writing and if writing is dispalyed
+        :param language: str; language all text is currently displayed in
         """
-        self.content = _get_writing_content(self.button.liste, language, self.button.number)  # setzt den Inhalt neu
-        self.active = self.button.active  # setzt sich auf inaktiv bzw. aktiv
+        self.content = _get_writing_content(self.button.liste, language, self.button.number)  # updates content
+        self.active = self.button.active  # writing is dispalyed if button is displayed
 
 
 # -------
 # buttons' creation
-def _create_start_buttons(field_size, button_bg_color):
+def _get_field_coords_from_start(xcoord_count, start_coord):
     """
-    erstellt die Knoepfe, die bei Beginn sichtbar sind
-    :param field_size: float; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :return: nothing
-    """
-    # erstellt Liste fuer die Knoepfe
-    global start_buttons
-    start_buttons = []
-    # setzt die obere linke Ecke zuerst auf ganz links oben und die Groesse der Knoepfe
-    loc_tl = [int(3 / 2 * field_size), int(3 / 2 * field_size)]
-    size_x = field_size * 9
-    size_y = field_size * 2
-    # erstellt sechs Startknoepfe
-    for i in range(6):
-        # erstellt eine Liste, in der spaeter die Koordinaten des Knopfes zu finden sind
-        field_coords = []
-        x = 0
-        # erstellt die 16 Koordinaten der jeweiligen Startknoepfe
-        for j in range(22):
-            field_coords.append([0, 0])
-            # setzt die zweite Koordinate auf null bzw. eins, da die Knoepfe jeweils 2 Felder hoch sind
-            if j < 11:
-                y = 0
-            elif j == 11:
-                # setzt die erste Koordinate zurueck auf 0, wenn mit der zweiten Reihe der Koordinaten begonnen wird,
-                # und die zweite Koordinate um eins hoeher, um die zweite Reihe der Koordinaten zu erreichen
-                y = 1
-                x = 0
-            else:
-                y = 1
-            # aendert die zweite Koordinate weiter nach oben, wenn nicht der erste Knopf erstellt wird,
-            # da die anderen Knoepfe weiter unten liegen
-            y += 3 * i
-            # setzt die beiden Koordinaten in die Liste der Koordinaten ein
-            field_coords[j][0] = x
-            field_coords[j][1] = y
-            # setzt die erste Koordinate nach oben, um die Koordinaten daneben zu erreichen
-            x += 1
-        # erstellt die Knoepfe mit den vorher ermittelten Werten und fuegtt sie in die Liste ein
-        start_buttons.append(0)
-        start_buttons[i] = Button(loc_tl, size_x, size_y, 11, 2, field_coords, "unfilled", "start_buttons", True,
-                                  button_bg_color, i)
-        # aendert die Ecke links oben um drei Felder nach unten
-        loc_tl[1] += 3 * field_size
+    creates list with all fields a button is on depending on its size and location
 
-
-def _get_loc_top_left_end_b(end_button_number):
-    """
-    returns the top left field coordinate of the end button
-    :param end_button_number: int; end button's number
-    :return: list[int, int]; coordinate of the button's top left corner
-    """
-    if end_button_number == 0:
-        return 25 / 2, 25 / 2  # 0 is the end button while orientation == "width"
-
-    elif end_button_number == 1:
-        return 25 / 2, 25 / 2  # 1 is the end button while orientation == "height"
-
-    elif end_button_number == 2:
-        return 9 / 2, 25 / 2  # 2 is the settings button while orientation == "width"
-
-    elif end_button_number == 3:
-        return 25 / 2, 19 / 2  # 3 is the settings button while orientation == "height"
-
-
-def _get_field_coords_end_b(end_button_number):
-    """
-    returns a list with an end button's coordiantes.
-    This list than holds all the coordinates on which the button can be clicked
-    :param end_button_number: int; end button's number
+    :param xcoord_count: int; number of fields in x direction the button is covering
+    :param start_coord: list[int, int]; top left coordiante of the button
     :return: list[list[int, int], list[int, int], ...]; coordiantes the button is on
     """
-    if end_button_number == 0:  # 0 is the end button while orientation == "width"
-        xcoord_count = 7  # sets the width of the button
-        start_coord = [11, 11]  # sets the top left field coord of the button
-
-    elif end_button_number == 1:  # 1 is the end button while orientation == "height"
-        xcoord_count = 8  # sets the width of the button
-        start_coord = [11, 11]  # sets the top left field coord of the button
-
-    elif end_button_number == 2:  # 2 is the settings button while orientation == "width"
-        xcoord_count = 7  # sets the width of the button
-        start_coord = [3, 11]  # sets the top left field coord of the button
-
-    else:  # 3 is the settings button while orientation == "height"
-        xcoord_count = 8  # sets the width of the button
-        start_coord = [11, 8]  # sets the top left field coord of the button
-
     field_coords = []  # creates a list that is going to hold the field coords
     next_coord = start_coord[:]
     for j in range(2 * xcoord_count):
@@ -407,7 +199,7 @@ def _get_field_coords_end_b(end_button_number):
         elif j == (xcoord_count - 1):
             # sets the y coordiante to one plus the start y coordinate, if the second line of coordinates is added
             next_coord[1] = start_coord[1] + 1
-            # sets the x coordiante to the same as the start x coordinate when the second line gets started
+            # sets the x coordiante to the same as the start x coordinate when the second line begins
             next_coord[0] = start_coord[0]
         else:
             # sets the y coordiante to one plus the start y coordinate, if the second line of coordinates is added
@@ -415,34 +207,96 @@ def _get_field_coords_end_b(end_button_number):
 
         # adds 1 to the x-coordinate, so that the field coord next to the one before can be added
         next_coord[0] += 1
-    return field_coords  # returns the coordiantes the button is on
+    return field_coords  # returns all field coords the button is on
+
+
+def _create_start_buttons(field_size, button_bg_color):
+    """
+    creates buttons displayed while settings and in the beginning
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param button_bg_color: tup(int, int, int); background color of buttons, RGB
+    """
+    # creates lsit later containing all in game buttons
+    global start_buttons
+    start_buttons = []
+    loc_tl = [int(3 / 2 * field_size), int(3 / 2 * field_size)]  # sets top left corner for first button
+    # sets buttons' size
+    size_x = field_size * 10
+    size_y = field_size * 2
+    for i in range(6):  # currently there are six start buttons
+        # gets all coordinates
+        field_coords = _get_field_coords_from_start(xcoord_count=10, start_coord=[0, i * 3])
+        # creates button
+        start_buttons.append(0)
+        start_buttons[i] = Button(loc_tl, size_x, size_y, 11, 2, field_coords, None, "start_buttons", True,
+                                  button_bg_color, i)
+        # puts the top left corner 3 field sizes down
+        loc_tl[1] += 3 * field_size
+
+
+def _get_loc_top_left_end_b(end_button_number):
+    """
+    returns the top left field coordinate of the end button
+    :param end_button_number: int; end button's number
+    :return: list[int, int]; coordinate of the button's top left corner
+    """
+    if end_button_number == 0:
+        return 19 / 2, 25 / 2  # 0 is the end button while orientation == "width"
+
+    elif end_button_number == 1:
+        return 25 / 2, 23 / 2  # 1 is the end button while orientation == "height"
+
+    elif end_button_number == 2:
+        return 3 / 2, 25 / 2  # 2 is the settings button while orientation == "width"
+
+    elif end_button_number == 3:
+        return 25 / 2, 17 / 2  # 3 is the settings button while orientation == "height"
+
+    elif end_button_number == 4:
+        return 35 / 2, 25 / 2  # 4 is the save button while orientation == "width"
+
+    elif end_button_number == 5:
+        return 25 / 2, 29 / 2  # 5 is the save button while orientation == "height"
+
+
+def _get_field_coords_end_b(end_button_number):
+    """
+    returns a list with an end button's coordiantes.
+    This list than holds all the coordinates on which the button can be clicked
+    :param end_button_number: int; end button's number
+    :return: list[list[int, int], list[int, int], ...]; coordiantes the button is on
+    """
+    # calculates first coordinate
+    start_coord = list(_get_loc_top_left_end_b(end_button_number))
+    start_coord[0] -= 1.5
+    start_coord[1] -= 1.5
+    # returns the coordinates the button is on
+    return _get_field_coords_from_start(xcoord_count=7, start_coord=start_coord)
 
 
 def _create_end_buttons(field_size):
     """
-    creates buttons to end the game and to go to the settings ingame
-    :param field_size: float; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :return: nothing
+    creates buttons to end the game, to go to the settings in game and to save the game
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     """
-    # erstellt eine Liste, in der spaeter die Knoepfe zum beenden des Spiels sind
+    # creates list later holding all in game buttons
     global end_buttons
     end_buttons = []
-    for i in range(4):
-        # setzt die Koordianten fuer die obere linke Ecke
-        loc_tl = _get_loc_top_left_end_b(i)
-        # setzt die Breite des Knopfes, da diese sich bei den beiden unterscheidet
-        field_count_x = 8 - 1 * (1 - (i % 1))
-        # setzt die Groesse des jeweiligen Knopfes
+    for i in range(6):  # currently 3 buttons, both twice for different orientation
+        loc_tl = _get_loc_top_left_end_b(i)  # gets coordinates for top left corner
+        field_count_x = 7  # sets button's width
+        # calculates button's size
         size_x = field_count_x * field_size
-        size_y = 2 * field_size + i * field_size
-        # setzt die Koordinaten, auf denen der Knopf angeklickt werden kann
-        field_coords = _get_field_coords_end_b(i)
-        if i < 2:
+        size_y = 2 * field_size + (1 - (i % 2)) * field_size
+        field_coords = _get_field_coords_end_b(i)  # gets coordiantes on which the button can be clicked
+        # sets button's background color according to usage
+        if i < 2:  # surrender button
             color = (170, 0, 0)
-        else:
+        elif i < 4:  # settings button
             color = (0, 50, 0)
-        # erstellt die Knoepfe mit den noetigen Werten und Koordinaten
+        else:  # save button
+            color = (0, 0, 100)
+        # creates button
         end_buttons.append(0)
         end_buttons[i] = Button(loc_tl, size_x, size_y, field_count_x, 2, field_coords, "Beenden", "end_buttons",
                                 False, color, i + 100)
@@ -450,207 +304,208 @@ def _create_end_buttons(field_size):
 
 def _create_buttons(field_size, button_bg_color):
     """
-    erstellt die Knoepfe, die auf der Oberflaeche erscheinen
-    :param field_size: float; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :return: nothing
+    creates buttons apart from request button (under writing initialization)
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     """
-    # erstellt die beiden Listen
-    _create_start_buttons(field_size, button_bg_color)
-    _create_end_buttons(field_size)
+    _create_start_buttons(field_size, button_bg_color)  # creates list with buttons displayed at the start
+    _create_end_buttons(field_size)  # creaets list with buttons displayed in game
 
 
 # -------
-# Initialisere die Schrift auf den Knoepfen
+# initializes buttons' writings
 def _get_writing_content(button_list, language, button_number):
     """
-    gibt die Schrift auf dem Knopf zurueck
-    :param button_list: str; Liste, in dem sich der Knopf befindet
-    :param language: str; Sprache, in der der Inhalt ausgegebn wird
-    :param button_number: int; Nummer des Knopfes
-    :param start_buttons: list[Button, Button, ...]; Liste mit den Startknoepfen
-    :return: str; Inhalt der Schrift auf dem Knopf
+    retunrs content for a writing
+    :param button_list: str; list the button is in
+    :param language: str; language all tect is currentöy displayed in
+    :param button_number: int; number of button
+    :return: str; content of button
     """
-    # ueberprueft, in welcher Liste sich der Knopf befindet
-    if button_list == "start_buttons":
-        # wenn sich der Knopf in der Liste mit den Satrtknoepfen befindet, wird entweder direkt die Intention des
-        # zugehoerigen Knopfes oder die Uebersetzung in die aktuelle Sprache zurueckgegeben
-        if language == "german":
-            return intention_dict_german[start_buttons[button_number].intention]
-        elif language == "english":
-            return intention_dict_english[start_buttons[button_number].intention]
-        elif language == "latin":
-            return intention_dict_latin[start_buttons[button_number].intention]
-    else:
-        # wenn sich der Knopf nicht in der Liste der Satrtknoepfe befindet, wird "Beenden" in der jeweiligen Sprache
-        # zurueckgegeben, da der Knopf sich dann in der Liste der Endknoepfe befinden muss
-        if button_number < 102:
-            if language == "german":
-                return "Beenden"
-            elif language == "latin":
-                return "Excedo"
-            else:
-                return "Give Up"
-        else:
-            if language == "german":
-                return "Menü"
-            elif language == "latin":
-                return "Mora"
-            else:
-                return "Settings"
+    dictionary = get_dict(language, "button")  # gets dictionary used to translate button's intention
+    if button_list == "start_buttons":  # button is displayed in the beginning
+        # translates button's intention
+        return dictionary[start_buttons[button_number].intention]
+    else:  # button is displayed in game
+        if button_number < 102:  # surrender button
+            intention = "Aufgeben"
+        elif button_number < 104:  # settings button
+            intention = "Menue"
+        else:  # save button
+            intention = "Speichern"
+        return dictionary[intention]  # translates button
 
 
 def _get_font_button(field_size):
     """
-    ermittelt die Schrift und gibt diese zurueck
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :return: SysFont; Schrift
+    gets font for a button's writing
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :return: SysFont; font the writing is displayed in
     """
-    # ermittelt die Groesse der Schrift je nach Groese eines virtuellen Feldes
-    font_size = int(field_size * 2)
-    # gibt die Schrift zurueck
-    return pygame.font.SysFont(None, font_size)
+    font_size = int(field_size * 2)  # calculates font's size
+    return pygame.font.SysFont(None, font_size)   # returns font
 
 
-def _get_top_left_corner_writing(button, field_size):
+def _get_center_writing(button):
     """
-    ermittelt die obere linke Ecke der Schrift
-    :param button: Button; zu der Schrift zugehoeriger Knopf
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :return: list[int, int]; Die Koordinate der oberen linken Ecke der Schrift
+    gets top left corner for button writings
+    :param button: Button; button the writing is on
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :return: list[int, int]; coordiantes of writings center
     """
-    # erhaelt die obere linke Koordinate des zugehoerigen Knopfes
-    xcoord, ycoord = button.location_top_left
-    # addiert beide Werte mit einem zusaeetzlichen Wert, sodass die Schrift etwas weiter unten rechts beginnt,
-    # als an der Stelle, an der sich die obere linke Ecke des Knopfes befindet
-    distance = int(field_size / 2.5)
-    xcoord += distance
-    ycoord += distance
-    # gibt die Koordinate der oberen linken Ecke der Scxhrift zurueck
-    return xcoord, ycoord
+    xcoord, ycoord = button.location_top_left  # buttons top left corner
+    xcoordadd, ycoordadd = button.size_x / 2, button.size_y / 2  # gets buttons center
+    xcoord += xcoordadd  # adds half of button's size to x-coordinate
+    ycoord += ycoordadd  # adds half of button's size to y-koordinate
+    return xcoord, ycoord  # returns writing's center
 
 
 def __init__button_writings(language, color_writing, color_end_b_writing, field_size):
     """
-    erstellt die Schrift auf den Knoepfen
-    :param language: str; aktuelle Sprache, in der der Inhalt ausgegeben wird
-    :param color_writing: tuple(int, int, int); Farbe der Schrift auf den Startknoepfen
-    :param color_end_b_writing: tuple(int, int, int); Farbe der Schrift auf den Endknoepfen
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :return: nothing
+    creates writings on buttons
+
+    :param language: str; language the program is currently displaying its writings in
+    :param color_writing: tuple(int, int, int); color of start buttons' writings
+    :param color_end_b_writing: tuple(int, int, int); color of end buttons' writings
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     """
-    # erstellt eine leere Liste, in der spaeter die Schrift der Startknoepfe zu finden ist
+    # creates a list later holding all writings on start buttons
     global button_writings_start
     button_writings_start = []
     for button in start_buttons:
-        # geht alle Startknoepfe durch und erstellt fuer jeden eine Schrift,
-        # die dann in die zuvor erstellte Liste eingefuegt wird
+        # creates a wrtiting for that button
         button_writings_start.append(ButtonWriting(_get_writing_content("start_buttons", language, button.number),
                                                    _get_font_button(field_size), color_writing,
-                                                   _get_top_left_corner_writing(button, field_size),
+                                                   _get_center_writing(button),
                                                    button, None, True))
-    # erstellt eine leere Liste, in der spaeter die Schrift der Endknoepfe zu finden ist
+    # creates a list later holding all writings on in game buttons
     global button_writings_end
     button_writings_end = []
-    for button in end_buttons:
-        # geht alle Endknoepfe durch und erstellt fuer jeden eine Schrift,
-        # die dann in die zuvor erstellte Liste eingefuegt wird
+    for button in end_buttons:  # goes through every in game button
+        # creates a writing for that button
         button_writings_end.append(ButtonWriting(_get_writing_content("end_buttons", language, 0),
                                                  _get_font_button(field_size), color_end_b_writing,
-                                                 _get_top_left_corner_writing(button, field_size), button, None, False))
+                                                 _get_center_writing(button), button, None, False))
 
 
-# -------
-# initialisiere das Modul "buttons"
 def __init__buttons(language, color_writing, color_end_b_writing, field_size, button_bg_color):
     """
-    initialisiert das Modul "buttons"
-    :param language: str; aktuelle Sprache, in der der Inhalt ausgegeben wird
-    :param color_writing: color_writing: tuple(int, int, int); Farbe der Schrift auf den Startknoepfen
-    :param color_end_b_writing: color_end_b_writing: tuple(int, int, int); Farbe der Schrift auf den Endknoepfen
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :return: nothing
+    initializes buttons by creating buttons
+
+    :param language: str; language the program is currently displaying its writings in
+    :param color_writing: color_writing: tuple(int, int, int); color of start buttons' writings
+    :param color_end_b_writing: color_end_b_writing: tuple(int, int, int); color of end buttons' writings
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     """
-    # erstellt die Knoepfe, die auf der Oberflaeche zu sehen sind
-    _create_buttons(field_size, button_bg_color)
-    # erstellt die Schrift auf den Knoepfen
-    __init__button_writings(language, color_writing, color_end_b_writing, field_size)
+    _create_buttons(field_size, button_bg_color)  # creates buttons
+    __init__button_writings(language, color_writing, color_end_b_writing, field_size)  # creates writings
+
+
+def create_request_buttons(field_size, bg_color, writing_color, language):
+    """
+    creates request buttons labeled with 'New Game' and 'Load Game'
+
+    those buttons are used once after the beginning and before the actual game start
+
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param bg_color: tup(int, int, int); color of the buttons' backgrounds
+    :param writing_color: tup(int, int, int); writings' colors
+    :param language: str; language the program currently displays all writing in
+    """
+    global request_buttons
+    global button_writings_request
+    request_buttons = []  # creates a list that later holds the request buttons
+    button_writings_request = []  # creates a list that later holds the writings to the request buttons
+    for i in range(2):
+        # determines the correct intention for the button
+        intention = 'new' if i == 0 else 'load'
+        # calculates button's size
+        size_x = field_size * 10
+        size_y = field_size * 2
+        # determines the correct dict to show request in correct language
+        lang_dict = get_dict(language, "button")
+        if i:
+            location_top_left = [35 / 2 * field_size, 15 / 2 * field_size]
+            start_coord = [16, 6]
+        else:
+            location_top_left = [11 / 2 * field_size, 15 / 2 * field_size]
+            start_coord = [4, 6]
+        xcoord_count = 10
+
+        # creates a button
+        request_buttons.append(Button(size_x=size_x, size_y=size_y, number=i + 200, location_top_left=location_top_left,
+                                      liste='request_buttons', intention=intention, field_size_x=8, field_size_y=2,
+                                      field_coords=_get_field_coords_from_start(xcoord_count, start_coord),
+                                      color_local=bg_color, active=False))
+        # creates a writing to the button
+        button_writings_request.append(ButtonWriting(top_left_corner=_get_center_writing(request_buttons[i]),
+                                                     font=_get_font_button(field_size),
+                                                     content=lang_dict[intention], color_local=writing_color,
+                                                     button=request_buttons[i], background=None, active=False))
 
 
 # -------
-# erneure die Koordinaten der Knoepfe und der Schrift darauf
+# refreshes buttons' and their writings' coordinates
 def refresh_loc_buttons(field_size, orientation, zustand):
     """
-    setzt die Koordinaten der Knoepfe neu, noetig wenn die Oberflaeche veraendert wird
+    refreshes coordinates of buttons, used when window's size is adjusted
+
     :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     :param orientation: str; width/height, depending on what is bigger
     :param zustand: str; ingame/start/settings, depending on what the program is doing
     """
-    for start_button in start_buttons:
-        # geht alle Startknoepfe durch und aktualisiert deren Koordinaten
-        start_button.change_loc_coords(field_size)
-    button_number = 0
-    for end_button in end_buttons:
-        # geht alle Endknoepfe durch und aktualisiert deren Koordinaten
-        end_button.change_loc_coords(field_size)
-        # setzt den Knopf auf inaktiv oder aktiv, falls das Spiel bereits gespielt wird
-        if zustand == "ingame":
+    for start_button in start_buttons:  # goes through start buttons
+        start_button.change_loc_coords(field_size)  # refreshes its coordinates
+    button_number = 0  # starts to count to count to determine number of button
+    for end_button in end_buttons:  # goes through end buttons
+        end_button.change_loc_coords(field_size)  # refreshes its coordinates
+        if zustand == "ingame":  # refreshes button's visibility
             end_button.active = end_button.get_active_end_b(orientation)
-        button_number += 1
+        button_number += 1  # continues counting
 
 
 def refresh_loc_writing(field_size, zustand):
     """
-    setzt die Koordinaten fuer die Schrift neu, noetig bei Veraenderung der Oberflaeche
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :param zustand: str; gibt an, ob das Spiel bereits gespielt wird, oder sich noch am Start befindet
-    :return: nothing
+    refreshes coordinates of writings, used when window's size is adjusted
+
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param zustand: str; ingame/start/settings, depending on what the program is doing
     """
-    for button_writing in button_writings_start:
-        # geht die Liste mit der Schrift der Startknoepfe durch und aktualisiert die Koordinaten der Schrift
-        button_writing.change_loc_coords(field_size)
-    # erstellt eine variable, die durch die Knoepfe durchzaehlt und dabei die Nummer des aktuellen Knopfes darstellt
-    button_number = 0
-    for button_writing in button_writings_end:
-        # geht die Liste mit der Schrift der Endknoepfe durch und aktualisiert die Koordinaten der Schrift
-        button_writing.change_loc_coords(field_size)
-        # aktualsiert dei Aktivitaet der Schrift auf den Endknoepfe, wenn das Spiel bereits gespielt wird
+    for button_writing in button_writings_start:  # goes through start writings
+        button_writing.change_loc_coords(field_size)   # refreshes its coordinates
+    button_number = 0  # begins counting to determine number of button
+    for button_writing in button_writings_end:  # goes through in game writing
+        button_writing.change_loc_coords(field_size)  # refreshes its coordinates
         if zustand == "ingame":
-            button_writing.active = button_writing.button.active
-        # zaehlt bei der Nummer der Knoepfe einen weiter, nachdem ein Knopf behandelt wurde
-        button_number += 1
+            button_writing.active = button_writing.button.active  # refreshes visibilty of end buttons' writings
+        button_number += 1  # continues counting
 
 
 # -------
-# erneure die Intention und dei Aktivitaet der Knoepfe
+# refreshes looks, intention and visibility of buttons
 def _refresh_intention_buttons(task_number, orientation, zustand):
     """
-    erneuert die Intention und Aktivitaet der Knoepfe
-    :param task_number: int; Nummer der aktuellen Aufgabe des Programms
-    :param orientation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
+    refreshes the buttons' intention and visibility
+
+    :param task_number: int; task number referring to its current task in the settings menu
+    :param orientation: str; width/heigth, depending on what is bigger
     :param zustand: str; start/ingame/settings, what the program is currently doing
     """
-    for button in start_buttons:  # geht alle Startknoepfe durch
-        button.change_intention(task_number, orientation, zustand)  # aendert deren Intention und Aktivitaet
-    for button in end_buttons:  # geht alle Endknoepfe durch
-        button.change_intention(task_number, orientation, zustand)  # aendert deren Intention und Aktivitaet
+    for button in start_buttons:  # goes through the start buttons
+        button.change_intention(task_number, orientation, zustand)  # refreshes its intention
+    for button in end_buttons:  # goes through the in game buttons
+        button.change_intention(task_number, orientation, zustand)  # refreshes its intention
 
 
 def _refresh_content_b_writing(language):
     """
-    erneuert den Inhalt der Schrift auf den Knoepfen
-    :param language: str; aktuelle Sprache, in der der text ausgegeben wird
-    :return: nothing
+    refreshes the writings' contents
+
+    :param language: str; language the program is currently displaying its writing in
     """
-    for onewriting in button_writings_start:  # geht die Schrift fuer die Startknoepfe durch
-        onewriting.refresh_content(language)  # erneuert den Inhalt dieser Schrift
-    for onewriting in button_writings_end:  # geht die Schrift fuer die Endknoepfe durch
-        onewriting.refresh_content(language)  # erneuert den Inhalt dieser Schrift
+    for onewriting in button_writings_start:  # goes through the start buttons' writings
+        onewriting.refresh_content(language)  # refreshes the writing's content
+    for onewriting in button_writings_end:  # goes through the in game buttons' writings
+        onewriting.refresh_content(language)  # refreshes the writing's content
 
 
 def refresh_buttons(task_number, orientation, language, zustand):
@@ -666,39 +521,67 @@ def refresh_buttons(task_number, orientation, language, zustand):
 
 
 def change_button_color(writing_color, bg_color):
-    for button in start_buttons:
-        button.color = bg_color
-    for local_writing in button_writings_start:
-        local_writing.color = writing_color
+    """
+    refreshes start button's colors
+
+    :param writing_color: tup(int, int, int); new writing color for the buttons
+    :param bg_color: tup(int, int, int); new background color for the buttons
+    """
+    for button in start_buttons:  # goes through every start button
+        button.color = bg_color  # refreshes its background color
+    for local_writing in button_writings_start:  # goes through every start writing
+        local_writing.color = writing_color  # refreshes its color
 
 
 # -------
-# gibt die Knoepfe aus
+# shows buttons on screen
 def draw_buttons(screen):
     """
-    gibt die Knoepfe auf dem Bildschirm aus
-    :param screen: Surface; die Oberflaeche, auf der alles zu sehen ist
-    :return: nothing
+    shows buttons on screen
+
+    :param screen: Surface; surface covering the whole window
     """
-    for button in start_buttons:  # geht alle Startknoepfe durch
+    for button in start_buttons:  # goes through every start button
         if button.active:
-            button.draw(screen)  # gibt den Knopf aus, falls dieser aktiv ist
-    for button in end_buttons:  # geht alle Endknoepfe durch
+            button.draw(screen)  # shows the button
+    for button in end_buttons:  # goes through every start button
         if button.active:
-            button.draw(screen)  # gibt den Knopf aus, falls dieser aktiv ist
-    for onewriting in button_writings_start:  # geht die Schrift fuer die Startknoepfe durch
+            button.draw(screen)  # shows the button
+    for onewriting in button_writings_start:  # goes through every start writing
         if onewriting.active:
-            onewriting.draw(screen)  # gibt die Schrift aus, falls diese aktiv ist
-    for onewriting in button_writings_end:  # geht die Schrift fuer die Endknoepfe durch
+            onewriting.draw(screen, True)  # shows the writing
+    for onewriting in button_writings_end:  # goes through every in game writing
         if onewriting.active:
-            onewriting.draw(screen)  # gibt die Schrift aus, falls diese aktiv ist
+            onewriting.draw(screen, True)  # shows the writing
+
+
+def draw_request_buttons(screen):
+    """
+    shows request buttons on screen, used when program asks a question
+
+    :param screen: Surf; surface that covers the whole window
+    """
+    for button in request_buttons:  # goes through every request button
+        button.draw(screen)  # shows that button
+    for onewriting in button_writings_request:  # goes through every request button's writing
+        onewriting.draw(screen, True)  # shows that writing
 
 
 # ------
 # returns the buttons
 def get_buttons():
     """
-    return all buttons
+    returns start and in game buttons
     :return: list[list[Button, ...], list[Button, ...]; lists with all buttons
     """
     return start_buttons, end_buttons
+
+
+def get_request_buttons():
+    """
+    returns request buttons
+    used to determine a click on them while request loop is running
+
+    :return: list[Button, Button]; list with request buttons
+    """
+    return request_buttons
