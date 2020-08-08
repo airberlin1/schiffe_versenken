@@ -1,10 +1,12 @@
-# commented, partly german
 # module with the playfield, it's output on the GUI and it's coordinates
 
 # ------
-# imports pygame, that is used to build a GUI, and the writing for it being able to displayed on the GUI
+# imports pygame, that is used to build a GUI, and the writing for it being able to displayed on the GUI,
+# as well as save used to save and load game and chat used to display errors
 import pygame
 import writing
+import save
+import chat
 
 # ------
 # sets tuples with used colors and the alphabet in alphabetic order to be displayed on top of the playfield
@@ -13,7 +15,7 @@ GREY = (170, 170, 170)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", " I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U",
+alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U",
             "V", "W", "X", "Y", "Z"]
 
 
@@ -21,17 +23,16 @@ alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", " I", "J", "K", "L", "M", "N
 # classes "BigField", "SmallField" and "PlayfieldWriting"
 class BigField:
     """
-    Spielfeld, standardmaeßig 10x10, welches beide Spieler, sowohl der Spieler als auch der Computergegner haben
+    boards, 10x10 by default
     """
 
     def __init__(self, size_x, size_y, location_top_left, field_count_x=10, field_count_y=10):
         """
-        initialisiert das jeweilige Spielfeld und setzt dessen Werte
-        :param size_x: int; die Groesse des Spielfelds in die Breite
-        :param size_y: int; die Groesse des Spielfelds in die Hoehe
-        :param location_top_left: list[int, int]; die Koordinaten der linken oberen Ecke des Spielfelds
-        :param field_count_x: int; die Anzahl der Felder innerhalb des Spielfelds in die Breite
-        :param field_count_y: int; die Anzahl der Felder innerhalb des Spielfelds in die Hoehe
+        :param size_x: int; horizontal size
+        :param size_y: int; vertical size
+        :param location_top_left: list[int, int]; top left corner coordinate
+        :param field_count_x: int; number of tiles in horizontal direction
+        :param field_count_y: int; number of tiles in vertical direction
         """
         self.size_x = size_x
         self.size_y = size_y
@@ -42,58 +43,53 @@ class BigField:
     def change_loc_coords(self, field_size, orienation, own_field):
         """
         aendert die Koordinaten des Spielfeldes
-        :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-        :param orienation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
-        :param own_field: bool; gibt an, ob es sich um das eigene oder das gegnerische Spielfeld handelt
-        :return: nothing
+        :param field_size: float; size of a virtual field, depending on size of the playfield and the size of the window
+        :param orienation: str; width or height depending on the size and appearance of the window
+        :param own_field: bool; player's board
         """
-        # aendert die Groesse des Spielfelds
+        # updates board's size
         self.size_y = self.field_count_y * field_size
         self.size_x = self.field_count_x * field_size
-        # aendert die Koordinaten der oberen linken Ecke, ueberprueft dafuer zuerst, von welchem Spielfeld dies
-        # geaendert wird und ggf. die Oberflaechenausrichtung
-        if not own_field:
-            self.location_top_left = [field_size * 3 / 2, field_size * 3 / 2]
-        else:
-            if orienation == "height":
-                self.location_top_left = [field_size * 3 / 2, field_size * 25 / 2]
-            else:
-                self.location_top_left = [field_size * 25 / 2, field_size * 3 / 2]
+        if not own_field:  # board belongs to enemy
+            self.location_top_left = [field_size * 3 / 2, field_size * 3 / 2]  # updates top left coordiante
+        else:  # board belogs to player
+            if orienation == "height":  # game window is bigger in veritcal direction
+                self.location_top_left = [field_size * 3 / 2, field_size * 25 / 2]  # updates top left coordiante
+            else:  # game window is bigger in horizontal direction
+                self.location_top_left = [field_size * 25 / 2, field_size * 3 / 2]  # updates top left coordiante
 
     def draw(self, screen):
         """
-        gibt das grosse Feld auf dem Bildschirm aus, als dicke schwarze Umrandung,
-        mit einer etwas duenneren, weissen Umrandung,
-        die zusammen einen Kontrast zu nahezu jedem Hintergrund zur Folge haben
-        :param screen: Surface; die Oberflaeche, auf der alles zu sehen ist
-        :return: nothing
+        displays board with black and white outline
+
+        :param screen: Surface; surface covering the whole game window
         """
-        pygame.draw.rect(screen, BLACK,  # zeichnet die dicke, schwarze Umrandung
+        pygame.draw.rect(screen, BLACK,  # dispalys thick black outline
                          (self.location_top_left[0], self.location_top_left[1], self.size_x, self.size_y), 5)
-        pygame.draw.rect(screen, WHITE,  # zeichnet die duennere, weisse Umrandung
+        pygame.draw.rect(screen, WHITE,  # displays thinner white outline
                          (self.location_top_left[0], self.location_top_left[1], self.size_x, self.size_y), 3)
 
 
 class SmallField:
     """
-    kleines feld, auf dem entweder ein Schiff ist oder auch nicht, und das entweder getroffen wurde oder auch nicht
+    tiles on boards
+
+    displayed with clicked/hit attributes
     """
 
     def __init__(self, big_field, ship_on, hit_on, clicked_on, location_coord_x, location_field_x, location_field_y,
                  location_coord_y, ship_number=-1):
         """
-        initialisiert das jeweilige kleine Feld
-        :param big_field: int; die Nummer des Spielfeldes, zu dem das kleine Feld gehoert,
-                          wobei 1 das eigene und 0 das gegnerische Spielfeld darstellt
-        :param ship_on: bool; gibt an, ob sich ein Schiff auf diesem Feld befindet
-        :param hit_on: bool; gibt an, ob dieses Feld bereits beschossen wurde
-        :param clicked_on: bool; Feld angeklickt
-        :param location_coord_x: int; die x-Koordintae der oberen linken Ecke des Feldes
-        :param location_field_x: int; die Nummer des Feldes in der Breite, auf dem sich das Feld befindet
-        :param location_field_y: int; die Nummer des Feldes in der Hoehe, auf dem sich das Feld befindet
-        :param location_coord_y: int; die y-Koordintae der oberen linken Ecke des Feldes
-        :param ship_number: die Nummer des Schiffes, das sich auf dem Feld befindet, falls eines vorhanden ist
+        :param big_field: int; tile is on 0: enemy's board
+                                          1: player's board
+        :param ship_on: bool; there is a shi on this tile, not used curretnly
+        :param hit_on: bool; tile was already targeted, should always be False
+        :param clicked_on: bool; tile is clicked, should always be false
+        :param location_coord_x: int; x coordinate
+        :param location_field_x: int; x field coordinate
+        :param location_field_y: int; y field coordinate
+        :param location_coord_y: int; y cordinate
+        :param ship_number: ship's number if ship is on tile, not used currently
         """
         self.big_field = big_field
         self.ship_on = ship_on
@@ -105,97 +101,102 @@ class SmallField:
         self.location_coord_y = location_coord_y
         self.ship_number = ship_number
 
-    def change_loc_coords(self, field_size, orienation):
+    def change_loc_coords(self, field_size, orientation):
         """
-        aendert die Koordinaten des Feldes
-        :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-        :param orienation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
-        :return: nothing
+        updates tile's coordinates
+
+        :param field_size: float; size of a virtual field, depending on size of the playfield and the size of the window
+        :param orientation: str; width or height depending on the size and appearance of the window
         """
-        if self.big_field == 0:  # ueberpruft, in welchem Spielfeld sich das Feld befindet
-            # setzt die Koordinaten neu
+        if self.big_field == 0:  # tile is on enemy's board
+            # updates coordinates
             self.location_coord_x = 3 / 2 * field_size + self.location_field_x * field_size
             self.location_coord_y = 3 / 2 * field_size + self.location_field_y * field_size
-        else:
-            if orienation == "height":  # ueberprueft den Bildschirmzustand
-                if self.location_field_x > 9:  # ueberprueft, ob sich der Bildschirmzustand veraendert hat
-                    self.location_field_x -= 10  # setzt das Feld in die Breite neu
-                    self.location_field_y += 10  # setzt das Feld in die Hoehe neu
-                loc_field_x = self.location_field_x  # setzt eine Variable auf die Nummer des Feldes in die Breite
-                # setzt eine Variable auf die Nummer des Feldes in die Hoehe + 1, da hier ein Feld uebersprungen wird
-                loc_field_y = self.location_field_y + 1
-            else:
-                if self.location_field_y > 9:  # ueberprueft, ob sich der Bildschirmzustand veraendert hat
-                    self.location_field_x += 10  # setzt das Feld in die Breite neu
-                    self.location_field_y -= 10  # setzt das Feld in die Hoehe neu
-                # setzt eine Variable auf die Nummer des Feldes in die Breite + 1, da hier ein Feld uebersprungen wird
-                loc_field_x = self.location_field_x + 1
-                loc_field_y = self.location_field_y  # setzt eine Variable auf die Nummer des Feldes in die Hoehe
-            # setzt die Koordinaten des Feldes neu
+
+        else:  # tile is on player's board
+            if orientation == "height":  # game window is bigger in vertical direction
+                if self.location_field_x > 9:  # orientation has changed since last use of method
+                    # updates field coordinate
+                    self.location_field_x -= 10
+                    self.location_field_y += 10
+                loc_field_x = self.location_field_x  # horizontal field
+                loc_field_y = self.location_field_y + 1  # vertical field + 1, needed because of design flaw
+            else:  # game window is bigger in horizontal direction
+                if self.location_field_y > 9:  # orientation has changed since last use of method
+                    # updates field coordiante
+                    self.location_field_x += 10
+                    self.location_field_y -= 10
+                loc_field_x = self.location_field_x + 1  # horizontal field + 1, needed because of design flaw
+                loc_field_y = self.location_field_y  # vertical field
+
+            # updates tile's coordinate
             self.location_coord_x = 3 / 2 * field_size + loc_field_x * field_size
             self.location_coord_y = 3 / 2 * field_size + loc_field_y * field_size
 
     def draw(self, screen, field_size):
         """
-        gibt das kleine Feld auf dem Bildschirm aus, als dicke schwarze Umrandung,
-        mit einer etwas duenneren, weissen Umrandung,
-        die zusammen einen Kontrast zu nahezu jedem Hintergrund zur Folge haben
-        :param screen: Surface; die Oberflaeche, auf der alles zu sehen ist
-        :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-        :return: nothing
+        displays tile with black and white outline and marke as clicked/hit if neccessary
+
+        :param screen: Surface; surfacce covering the whole game window
+        :param field_size: float; size of a virtual field, depending on size of the playfield and the size of the window
         """
-        # zeichnet die dicke, schwarze Umrandung
+        # displays thick black outline
         pygame.draw.rect(screen, BLACK, (self.location_coord_x, self.location_coord_y, field_size, field_size), 3)
-        pygame.draw.rect(screen, WHITE,  # zeichnet die duennere, weisse Umrandung
+        pygame.draw.rect(screen, WHITE,  # dispalys thinner white outline so that board is seen on all backgrounds
                          (self.location_coord_x, self.location_coord_y, field_size, field_size), 1)
 
-        if self.clicked_on:  # ueberprueft, ob das Feld
-            pygame.draw.rect(screen, BLACK,  # zeigt das Feld schwarz
+        if self.clicked_on:  # tile is marked and thus waiting for confiramtion
+            pygame.draw.rect(screen, BLACK,  # dispalays tile black
                              (self.location_coord_x, self.location_coord_y, field_size, field_size), 0)
 
-        if self.hit_on:  # ueberprueft, ob das Feld bereits getroffen wurde
-            color = GREY  # setzt due Farbe auf Grau
-            # zeichnet ein  graues Kreuz ueber das Feld
+        if self.hit_on:  # tile was hit
+            color = GREY
+            # dispalys grey cross on top of tile
             pygame.draw.line(screen, color, (self.location_coord_x + field_size,
                                              self.location_coord_y),
                              (self.location_coord_x, self.location_coord_y + field_size), 5)
             pygame.draw.line(screen, color, (self.location_coord_x, self.location_coord_y),
                              (self.location_coord_x + field_size, self.location_coord_y + field_size), 5)
 
-    def become_hit_player(self, resource_path, sound_volume):
+    def become_hit_player(self, resource_path, sound_volume, language):
         """
-        das kleine Feld wird getroffen
+        hits tile
         :param resource_path: Func; returns the resource path to a relative path
         :param sound_volume: float; volume of sounds
         """
-        if self.hit_on:  # ueberprueft, ob das Feld bereits zuvor getroffen wurde
-            self.clicked_on = False  # entklickt das Feld
+        if self.hit_on:  # tile was hit previously
+            self.clicked_on = False  # unclicks field, should not be required in any case
 
-        elif self.clicked_on:
-            self.clicked_on = False  # entklickt das Feld
-            self.hit_on = True  # setzt das Feld als getroffen
-            new_channel = pygame.mixer.Channel(0)
-            sound = pygame.mixer.Sound(resource_path("assets/sounds/nothit.wav"))
-            sound.set_volume(sound_volume)
-            new_channel.play(sound)
+        elif self.clicked_on:  # tile is curretly marked and waiting for confirmation
+            self.clicked_on = False  # unclicks field, thus erasing black mark
+            self.hit_on = True  # hits field, thus displaying it with grey cross from now on
+            # plays sound of something hitting the water
+            try:
+                new_channel = pygame.mixer.Channel(0)  # sets a channel
+                sound = pygame.mixer.Sound(resource_path("assets/sounds/nothit.wav"))  # gets sound
+            except FileNotFoundError:
+                chat.add_missing_message("nothit.wav", resource_path("assets/sounds/"), language)
+            else:
+                sound.set_volume(sound_volume)
+                new_channel.play(sound)
 
-        else:
-            self.clicked_on = True  # klickt das Feld an
-        print(self.location_field_x, self.location_field_y)
-        print(self.clicked_on, self.hit_on)
+        else:  # tile has been newly clicked
+            self.clicked_on = True  # clicks the field to mark it black and allow confirmation
 
     def become_hit_enemy(self):
         """
-        das kleine Feld wird getroffen
+        hits tile
         """
-        self.hit_on = True  # trifft das Feld
-        self.clicked_on = True  # klickt das Feld an
+        self.hit_on = True  # hits field, thus displaying it with a greey cross from now on
+        self.clicked_on = True  # clicks field to mark it as the last hit field by the enemy
 
 
 class PlayfieldWriting(writing.Writing):
-    """Schrift am Rand des Spielelds"""
+    """
+    writing on boards' sides
+
+    allows player to distinguish between tiles more easily and enables communication about certain tiles
+    """
 
     def __init__(self, content, font, color, top_left_corner, field_coord_top_left, own_field, orientation=None):
         """
@@ -216,95 +217,90 @@ class PlayfieldWriting(writing.Writing):
     def refresh_loc_coords(self, field_size, orientation):
         """
         refreshes the writing's location and font
-        :param field_size: int; size of a virtual field, depending on size of the playfield and the size of the window
+        :param field_size: float; size of a virtual field, depending on size of the playfield and the size of the window
         :param orientation: str; width or height depending on the size and appearance of the window
-        :return: nothing
         """
-        if self.own_field:  # checks, on who's playfield the writing is
+        if self.own_field:  # checks on who's board the writing is
             if orientation != self.orientation:  # checks, if the orientation changed
                 self.orientation = orientation  # refreshes the writing's orientation
 
-                if orientation == "width":  # checks the orientation
-                    # refreshes the field_coords
+                if orientation == "width":  # game window is bigger in horizontal direction
+                    # updates field coordinates
                     self.field_coord_top_left[0] += 11
                     self.field_coord_top_left[1] -= 11
-                else:
-                    # refreshes the field_coords
+                else:  # game window is bigger in vertical direction
+                    # updates field coordinates
                     self.field_coord_top_left[0] -= 11
                     self.field_coord_top_left[1] += 11
 
         for i in range(2):
             # refreshes the writing's location
-            self.top_left_corner[i] = self.field_coord_top_left[i] * field_size + field_size * (0.7 - 0.1 * i)
+            self.top_left_corner[i] = self.field_coord_top_left[i] * field_size + field_size
 
         font_size = int(field_size * 1.3)  # calculates the new size of the writing
         self.font = pygame.font.SysFont(None, font_size)  # refreshes the font
 
 
 # -------
-# erstellt die Spielfelder
+# creates boards, their tiles and writings on boards' sides
 def _create_big_fields(field_size, field_count_x, field_count_y, orienation):
     """
-    erstellt die beiden Spielfelder
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :param field_count_x: int; die Anzahl der Felder eines Spielfeldes in horizontale Richtung
-    :param field_count_y: int; die Anzahl der Felder eines Spielfeldes in vertikale Richtung
-    :param orienation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
-    :return: nothing
+    creates both boards into global list big_fields
+
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param field_count_x: int; quantity of tiles on one board in horizontal direction
+    :param field_count_y: int; quantity of tiles on one board in vertical direction
+    :param orienation: str; width/height, depending on what is bigger
     """
-    global big_fields  # erstellt eine leere Liste, in der sich spaeter die beiden Spielfelder befinden
+    global big_fields  # creates list later containing both boards
     big_fields = [0, 0]
-    # legt Werte fuer die Spielfelder fest
-    location_top_left = [3 / 2 * field_size, 3 / 2 * field_size]  # ermittelt die obere linke Ecke
-    size_x = field_count_x * field_size  # ermittelt die Groesse des Feldes in horizontaler Richtung
-    size_y = field_count_y * field_size  # ermittelt die Groesse des Feldes in vertikaler Richtung
-    # erstellt das erste und gegnerische Spielfeld
+    size_x = field_count_x * field_size  # sets size in horizontal direction
+    size_y = field_count_y * field_size  # sets size in vertical direction
+
+    location_top_left = [3 / 2 * field_size, 3 / 2 * field_size]  # sets top left corner
+    # creates enemy's board
     big_fields[0] = BigField(size_x, size_y, location_top_left, field_count_x, field_count_y)
-    # ueberprueft den Bildschirmzustand und setzt danach die Ecke links oben neu
-    if orienation == "height":
-        location_top_left = [3 / 2 * field_size, 25 / 2 * field_size]
-    else:
-        location_top_left = [25 / 2 * field_size, 3 / 2 * field_size]
-    # erstellt das zweite und eigene Spielfeld
+
+    if orienation == "height":  # game window is bigger in vertical direction
+        location_top_left = [3 / 2 * field_size, 25 / 2 * field_size]  # sets top left corner
+    else:  # gae window is bigger in horizontal direction
+        location_top_left = [25 / 2 * field_size, 3 / 2 * field_size]  # sets top left corner
+    # creates player's board
     big_fields[1] = BigField(size_x, size_y, location_top_left, field_count_x, field_count_y)
 
 
 def _create_small_fields(field_size, orienation):
     """
-    erstellt die kleinen Felder, die sich in den Spielfeldern befinden
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :param orienation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
-    :return: nothing
+    creates boards' tiles into global list small_fields
+
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param orienation: str; width/height, depending on what is bigger
     """
-    global small_fields  # erstellt eine leere Liste, in der sich spaeter alle kleinen Felder befinden
+    global small_fields  # creates lsit later containing all tiles
     small_fields = []
-    for x in range(2):
-        # erstellt zwei Listen in der Liste, um zwischen den beiden Spielfeldern zu unterscheiden
+    for x in range(2):  # goes through number of boards
         small_fields.append([])
-        for i in range(big_fields[x].field_count_x):
-            # erstellt weitere Listen, die mit Nullen gefuellt sind, bei ansonsten normalen Einstellungen 10 x 10
+        for i in range(big_fields[x].field_count_x):  # goes through number of tiles in horizontal direction default=10
             small_fields[x].append([])
-            for j in range(big_fields[x].field_count_y):
+            for j in range(big_fields[x].field_count_y):  # goes through number of tiles in vertical direction default10
                 small_fields[x][i].append(0)
-                # setzt die Koordinaten innerhalb des Spielfeldes auf den Erstellungsort innerhalb der Listen
+                # sets field coordinates
                 location_field_y = j
                 location_field_x = i
-                if x == 0:  # ueberprueft, in welchem Spielfeld sich das Feld befindet
-                    # erstellt die Felder in dem ersten und gegnerischen Feld
+                if x == 0:  # tile is on enemy's board
+                    # creates tile
                     small_fields[x][i][j] = SmallField(x, False, False, False,
                                                        field_size * (3 / 2 + location_field_x), location_field_x,
                                                        location_field_y, field_size * (3 / 2 + location_field_y))
-                else:
-                    if orienation == "height":  # ueberpruft die Bildschirmausrichtung
-                        # erstellt die Felder im zweiten und eigenen Spielfeld
+                else:  # tile is on player's board
+                    if orienation == "height":  # game window is bigger in vertical direction
+                        # creates tile
                         small_fields[x][i][j] = SmallField(x, False, False, False,
                                                            field_size * (3 / 2 + location_field_x), location_field_x,
                                                            location_field_y + 10,
                                                            field_size * (25 / 2 + location_field_y))
-                    else:
-                        # erstellt die Felder im zweiten und eigenen Spielfeld
+                    else:  # agme window is bigger in horizontal direction
+                        # creates tile
                         small_fields[x][i][j] = SmallField(x, False, False, False,
                                                            field_size * (25 / 2 + location_field_x),
                                                            location_field_x + 10,
@@ -313,9 +309,9 @@ def _create_small_fields(field_size, orienation):
 
 def _create_writings(field_size):
     """
-    creates the writings on the side of the game
-    :param field_size: int; size of a virtual field, depending on size of the playfield and the size of the window
-    :return: nothing
+    creates the writings on the side of the boards into global list playfield_writings
+
+    :param field_size: float; size of a virtual field, depending on size of the playfield and the size of the window
     """
     global playfield_writings
     playfield_writings = []  # creates a list that later holds the writings
@@ -330,129 +326,126 @@ def _create_writings(field_size):
         field_coord_y = [0, 0, 0, 0]
 
         for j in range(big_fields[0].field_count_x):
-            if i < 2:  # checks, whether the writing next to the player's field is created
+            if i < 2:  # writing next to enemy's board is created
                 own_field = False
-            else:
+            else:  # writing next to player's board is created
                 own_field = True
 
-            if i % 2 == 1:  # checks, whether letters or numbers are created
+            if i % 2 == 1:  # numbers are created
                 content = str(j + 1)  # sets the content to the next number
                 field_coord_y[i] += 1  # changes the y field coord
-            else:
+            else:  # letters are created
                 content = alphabet[j]  # sets the content to the next letter
                 field_coord_x[i] += 1  # changes the x field coord
 
             field_coord_top_left = [field_coord_x[i], field_coord_y[i]]  # sets the next field coordinate
 
-            if i == 1 and j == 9:  # checks, if the ten next to the enemy's playfield is created
-                field_coord_top_left[0] -= 0.3  # sets it a small amount to the left
-
             # calculates the writing's location
             top_left_corner = [0, 0]
             for ij in range(2):
-                top_left_corner[ij] = field_coord_top_left[ij] * field_size + field_size * (0.7 - 0.15 * ij)
+                top_left_corner[ij] = field_coord_top_left[ij] * field_size + field_size
 
             # adds the writing to the list of writings
             playfield_writings.append(PlayfieldWriting(content, font, color, top_left_corner, field_coord_top_left,
                                                        own_field, "width"))
 
 
-def __init__playfield(orienation, field_size, field_count_x, field_count_y):
+def __init__playfield(load, language, orienation, field_size, field_count_x, field_count_y, resource_path):
     """
-    erstellt das gesamte Spielfeld mit den beiden Spielfeldern und den darin vorhandenen kleine Feldern,
-    sowie die Knoepfe auf der Oberflaeche
-    :param orienation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :param field_count_x: int; die Anzahl der Felder eines Spielfeldes in horizontale Richtung
-    :param field_count_y: int; die Anzahl der Felder eines Spielfeldes in vertikale Richtung
-    :return: nothing
+    creates boards and their tiles as well as writing on boards' side
+
+    when game is loaded, loads boards and their tiles instead
+
+    :param load: bool; game is loaded insted of being newly created
+    :param language: str; language all texts are currently displayed in
+    :param orienation: str; width/height, depending on what is bigger
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param field_count_x: int; quantity of tiles on one board in horizontal direction
+    :param field_count_y: int; quantity of tiles on one board in vertical direction
+    :param resource_path: Func; returns the resource path to a relative path
     """
-    _create_big_fields(field_size, field_count_x, field_count_y, orienation)  # erstellt die beiden Spielfelder
-    _create_small_fields(field_size, orienation)  # erstellt die kleinen Felder in den Spielfeldern
-    _create_writings(field_size)  # creates the writing on the side of the big fields
+    if load:  # saved game is loaded
+        global big_fields
+        global small_fields
+        try:
+            big_fields = save.load('lis', 'playfield', 1, resource_path)  # loads both boards
+        except FileNotFoundError:
+            chat.add_missing_message("playfield1.lis", resource_path("saves/"), language)
+            return True
+        try:
+            small_fields = save.load('lis', 'playfield', 2, resource_path)  # loads boards' tiles
+        except FileNotFoundError:
+            chat.add_missing_message("playfield2.lis", resource_path("saves/"), language)
+            return True
+    else:  # new game is created
+        _create_big_fields(field_size, field_count_x, field_count_y, orienation)  # creates both boards
+        _create_small_fields(field_size, orienation)  # creates boards' tiles
+    _create_writings(field_size)  # creates writings on the side of the boards
 
 
 # -------
-# erneuert die Koordinaten der Spielfelder und andere Attribute
+# updates boards' coordinates on the game window
 def refresh_loc_small_fields(field_size, orientation):
     """
-    setzt die Koordinaten der kleinen Felder neu, noetig wenn die Oberflaeche veraendert wird
+    refreshes the tiles' coordinates, used when changes to game window are made
     :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     :param orientation: str; width/height, depending on what is bigger
-    :return: nothing
     """
-    # geht durch alle kleinen Spielfelder durch
     for z in range(2):
         for i in range(big_fields[z].field_count_x):
-            for j in range(big_fields[z].field_count_y):
-                small_fields[z][i][j].change_loc_coords(field_size, orientation)  # aendert die Koordinaten des Felds
+            for j in range(big_fields[z].field_count_y):  # goes through every tile
+                small_fields[z][i][j].change_loc_coords(field_size, orientation)  # updates its coordinates
 
 
 def refresh_loc_big_fields(field_size, orientation):
     """
-    setzt die Koordinaten der Spielfelder neu, noetig wenn die Oberflaeche veraendert wird
+    refreshes the boards' coordinates, used when changes to game window are made
     :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     :param orientation: str; width/height, depending on what is bigger
     """
-    for i in range(2):
-        if i == 0:  # Ueberprueft die Nummer des Spielfeldes, wobei 0 das gegnerische und 1 das eigene ist
-            # setzt eine Variable, die angibt, ob das eigene Feld bearbeitet wird, auf 'False',
-            # wenn das gegnerische Feld bearbeitet wird
+    for i in range(2):  # goes through both boards
+        if i == 0:  # board is the enemy's
             own_field = False
-        else:
-            # setzt eine Variable, die angibt, ob das eigene Feld bearbeitet wird, auf 'True',
-            # wenn das eigene Feld bearbeitet wird
+        else:  # board is the player's
             own_field = True
-        big_fields[i].change_loc_coords(field_size, orientation, own_field)  # aendert die Koordinaten des Spielfelds
+        big_fields[i].change_loc_coords(field_size, orientation, own_field)  # upates board's coordinates
 
 
 def refresh_loc_writings(field_size, orientation):
     """
-    refreshes the coordinates of the writings
+    refreshes the writings' coordinates, used when changes to game window are made
     :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     :param orientation: str; width/height, depending on what is bigger
-    :return: nothing
     """
     for writing_local in playfield_writings:  # goes through every writing
-        writing_local.refresh_loc_coords(field_size, orientation)  # refreshes the coordiantes of the writing
-
-
-def unclick(coord):
-    """
-    reverts a click on the plyfield, used for the enemies clicks
-    :param coord: list[int, int]; coordiante of the field, that is going to be unclicked
-    :return: nothing
-    """
-    xcoord, ycoord = coord  # unpyks the coordinate of the field, that is going to be unclicked
-    small_fields[0][xcoord][ycoord].clicked_on = False  # unclicks that field
+        writing_local.refresh_loc_coords(field_size, orientation)  # refreshes writing's coordinates
 
 
 # -------
-# gibt die Spielfelder aus
+# displays boards
 def draw_playfield(screen, field_size, zustand):
     """
-    gibt die Spielfelder aus
-    :param screen: Surface; die Oberflaeche, auf der alles zu sehen ist
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :param zustand: str; gibt an, ob das Spiel bereits gespielt wird, oder sich noch am Start befindet
-    :return: nothing
+    displays both boards and nubers and letters used to make the player be able to tell tiles apart
+    :param screen: Surface; surface covering the whole game window
+    :param field_size: float; size of a virtual fieldthat is determined by the size of the window that inhabits the GUI
+    :param zustand: str; start/ingame/settings, used to determine loop the game is in currently
     """
-    # ueberprueft, ob das Spiel bereits gespielt wird, und damit auch, ob das Spielfeld angezeigt werden soll
-    if zustand == "ingame":
-        for big_field in big_fields:  # geht die beiden Spielfelder durch
-            big_field.draw(screen)  # zeichnet das jeweilige Spielfeld
-        # geht durch alle kleinen Spielfelder durch
+    if zustand == "ingame":  # boards are displayed
+        for big_field in big_fields:  # goes through boards
+            big_field.draw(screen)  # displays it
+
         for z in range(2):
             for i in range(big_fields[z].field_count_x):
-                for j in range(big_fields[z].field_count_y):
-                    small_fields[z][i][j].draw(screen, field_size)  # zeichnet das jeweilige kleine Feld
-        for writing_local in playfield_writings:
-            writing_local.draw(screen)
+                for j in range(big_fields[z].field_count_y):  # goes htrough every tile
+                    small_fields[z][i][j].draw(screen, field_size)  # displays it
+
+        for writing_local in playfield_writings:  # goes through every writing
+            writing_local.draw(screen, True)  # dispalys it
 
 
-def hit_small_field(player, field_coord_x, field_coord_y, resource_path, sound_volume, old_field_coord_x=-1,
+# ------
+# updates boards' values
+def hit_small_field(player, field_coord_x, field_coord_y, resource_path, sound_volume, language, old_field_coord_x=-1,
                     old_field_coord_y=-1):
     """
     hits a small field by marking it with an x and playing a sound while also displaying,
@@ -463,12 +456,13 @@ def hit_small_field(player, field_coord_x, field_coord_y, resource_path, sound_v
     :param field_coord_y: int; y coordiante of the small field that is hit
     :param resource_path: Func; creates the resource path to a relative path
     :param sound_volume: float; 0 - 1, volume of sounds
+    :param language: str; language all texts are currently displayed in
     :param old_field_coord_x: int; x coordiante of the small field that was hit before
     :param old_field_coord_y: int; y coordiante of the small field that was hit before
     """
     if player == 1:  # checks which player is currently playing
         # hits the field as a player
-        small_fields[1 - player][field_coord_x][field_coord_y].become_hit_player(resource_path, sound_volume)
+        small_fields[1 - player][field_coord_x][field_coord_y].become_hit_player(resource_path, sound_volume, language)
     else:
         # unclicks the previously hit field
         small_fields[1 - player][old_field_coord_x][old_field_coord_y].clicked_on = False
@@ -476,27 +470,51 @@ def hit_small_field(player, field_coord_x, field_coord_y, resource_path, sound_v
         small_fields[1 - player][field_coord_x][field_coord_y].become_hit_enemy()
 
 
+def unclick(coord):
+    """
+    reverts a click on the plyfield, used for the enemies clicks
+     and to revert players clicks when not click is not confirmed
+    :param coord: list[int, int]; coordinate of the field that is going to be unclicked
+    """
+    xcoord, ycoord = coord  # coordinate of field that is unclicked
+    small_fields[0][xcoord][ycoord].clicked_on = False  # unclicks that field
+
+
 # -------
-# gibt die Felder zurueck
+# returns board and values
 def get_big_fields():
     """
-    gibt die Spielfelder zurueck
-    :return: list[BigField, BigField]; Liste mit den beiden grossen Felder
+    :return: list[BigField, BigField]; list wih both boards
     """
-    return big_fields  # gibt die Spielfelder zurueck
+    return big_fields
 
 
 def get_small_fields():
     """
-    gibt die kleinen Felder zurueck
-    :return: list[SmallField, SmallField, ...]; Liste mit kleinen Felder
+    :return: list[SmallField, SmallField, ...]; list with all tiles on the boards
     """
     return small_fields
 
 
 def get_small_fieldcounts():
     """
-    gibt die Anzahl der kleinen Felder eines Spielfelds zurueck
-    :return: list[int, int]; Anzahl der kleinen Felder eines Spielfelds
+    :return: list[int, int]; quantity of tiles on one board
     """
     return big_fields[0].field_count_x, big_fields[0].field_count_y
+
+
+# ------
+# saves game
+def save_playfield(resource_path, language):
+    """
+    saves the playfield, used to continue games after closing the program
+
+    :param resource_path: Func; returns the resource path to a relative path
+    :param language: str; language all texts are currently dispalyed in
+    """
+    try:
+        save.save(big_fields, 'lis', 'playfield', 1, resource_path)  # saves board
+    except FileNotFoundError:
+        chat.add_missing_message("", resource_path("saves/"), language, False)
+    else:
+        save.save(small_fields, 'lis', 'playfield', 2, resource_path)  # saves tiles on the board
