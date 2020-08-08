@@ -1,59 +1,59 @@
-# commented, partly german
-# Modul, das Bilder auf den Bildschirm bringt und fuer die visuelle Ausgabe zustaendig ist
+"""module making things visible for user"""
 
-# TODO Ausgabe der Schiffe verbessern, Bilder (Turtle??)
-# TODO Treffer als Animation ausgeben
+# TODO ships as pictures
+# TODO animate hits
+# TODO Chat to communicate savings, errors, hits
 
 # -------
-# importiert pygame, mit dem alles in einem Fenster ausgegebn wird,
-# sowie die Module, mit denen weiteren Dingen die ausgegen werden
-import time
-import pygame
-from pygame.locals import *
-import buttons as bu
-import playfield as pf
-import slider as sl
+# imports pygame, used to display things
+# and modules displaying things
+import time  # wait 3 seconds in end screen
+import pygame  # display things
+from pygame.locals import *  # constants used in pygame
+import buttons as bu  # display buttons
+import playfield as pf  # dispaly boards
+import slider as sl  # display sliders
+import chat as ch  # dispaly chat
+import tables as ta  # display table
 
 
 # ------
-# gibt Groessen der Oberflaeche zurueck
+# returns sizes
 def get_screen_size_full_screen():
     """
-    gibt die Groesse des Bildschirms bei Vollbild zurueck
-    :return: list[int, int]; Breite und Hoehe des Bildschirms bei Vollbild
+    :return: list[int, int]; width, height in full screen
     """
-    pygame.init()
-    display_info = pygame.display.Info()  # erhaelt Information ueber den Bildschirm
-    # entnimmt daraus die Breite und Hoehe des Bildschirms zurueck
-    height = display_info.current_h
-    width = display_info.current_w
-    return width, height  # gibt die beiden Werte zurueck
+    display_info = pygame.display.Info()
+    height = display_info.current_h  # gets display's height
+    width = display_info.current_w  # gets display's width
+    return width, height  # returns display's size
 
 
 def get_window_size(width, height):
     """
-    laesst Hoehe und breite des bildschirms sowie die Groesse eines Feldes auslesen und den Bildschirmzustand auslesen
-    :param width: int; aktuelle Breite des Bildschirms
-    :param height: int; aktuelle Breite des Bildschirms
-    :return: list[int, int, int, str]; die Breite und Hoehe sowie die Groesse eines Feldes und der Bildschirmzustand
+    calculates size of one virtual field and orientation
+
+    :param width: int; window's width
+    :param height: int; window's height
+    :return: list[int, int, float, str]; window's height, window's width, size  of one virtual field, orientation
     """
-    if height > width:  # ueberprueft, ob der Bildschirm weiter in die Breite oder weiter in die Hoehe geht
-        field_size = width / 20  # setzt die Groesse eines Feldes abhaengig von der kleineren Groesse
-        orientation = "height"  # setzt den Bildschirmzustand auf die groessere Groesse
-    else:
-        field_size = height / 20  # setzt die Groesse eines Feldes abhaengig von der kleineren Groesse
-        orientation = "width"  # setzt den Bildschirmzustand auf die groessere Groesse
-    return height, width, field_size, orientation  # gibt alle Werte zurueck
+    if height > width:  # window's height is bigger than its width
+        field_size = width / 22  # updates size if one virtual field
+        orientation = "height"  # updates orientation
+    else:  # window's width is bigger than its height
+        field_size = height / 20  # updates size of one virtual field
+        orientation = "width"  # updates orientation
+    return height, width, field_size, orientation  # returns values
 
 
 def set_screen_size(width, height):
     """
-    setzt die Groesse der Oberflaeche neu
-    :param width: int; neue Breite der Oberflaeche
-    :param height: int; neue Hoehe der Oberflaeche
-    :return:
+    updates window's size, used when window's size has been adjusted
+
+    :param width: int; new width
+    :param height: int; new height
     """
-    # setzt die neuen Werte ein
+    # updates both values
     global global_width
     global global_height
     global_width = width
@@ -62,181 +62,282 @@ def set_screen_size(width, height):
 
 def get_screen_size():
     """
-    gibt die aktuelle Groesse der Oberflaeche zurueck
-    :return: list[int; int]; die Breite und Hoehe der Oberflaeche
+    :return: list[int; int]; wwindow's size
     """
-    return global_width, global_height  # gibt die aktuelle Groesse der Oberflaeche zurueck
+    return global_width, global_height
 
 
 def get_small_field_count():
     """
-    gibt die Anzahl der kleinen Felder innerhalb eines Spielfeldes zurueck
-    :return: list[int; int]; Anzahl der kleine Felder innerhalb eines Spielfeldes
+    :return: list[int; int]; number of tiles on one board
     """
-    # gibt die Anzahl der Felder in die Breite und in die Hoehe zurueck
     return pf.get_big_fields()[0].field_count_x, pf.get_big_fields()[0].field_count_y
 
 
-def _init_window(resource_path):
+def _init_window(resource_path, language):
     """
     initializes the window the game is played in
+
     :param resource_path: Func, returns a path to pictures and sounds
-    :return: nothing
+    :param language: str; language all texts are currently displayed in
     """
     global g_screen
-    icon = pygame.image.load(resource_path("assets/images/icon.jpg"))
-    pygame.display.set_icon(icon)  # creates an icon
+    try:
+        icon = pygame.image.load(resource_path("assets/images/icon.jpg"))  # loads icon
+    except pygame.error:  # file is not found
+        ch.add_missing_message("icon.jpg", resource_path("assets/images/"), language)
+    else:  # file is found
+        pygame.display.set_icon(icon)  # creates an icon
     pygame.display.set_caption("schiffe_versenken      v.alpha.3")  # creates a caption
     g_screen = pygame.display.set_mode(get_screen_size(), resizable)
 
 
 # -------
-# initialisiert das Modul 'visual_output'
-def __init__visual_output(resource_path, language, color_writing_start, sound_volume, music_volume, bu_bg_color,
-                          orientation="height", field_count_x=10, field_count_y=10):
+# initializes visible things
+def __init__chat():
+    pygame.init()
+    field_size, orientation = 50, "height"
+    ch.__init__chat(field_size, orientation)  # initializes chat
+
+
+def __init__visual_output(resource_path, language, color_writing_start, sound_volume, music_volume, bu_bg_color):
     """
-    initialisiert die Methode visual output
-    :param language: str; Sprache, in der die Schrift ausgegeben wird
-    :param orientation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
-    :param field_count_x: int; Anzahl der kleinen Felder eines großen Spielfelds in die Breite
-    :param field_count_y: int; Anzahl der kleinen Felder eines großen Spielfelds in die Hoehe
-    :return: nothing
+    initializes game window and buttons
+
+    :param resource_path: Func; returns a resource path to a relative path
+    :param language: str; language all texts are currently displayed in
+    :param color_writing_start: tup(int, int, int); color of start buttons' writings
+    :param sound_volume: float; 0-1, volume the sounds are currently played in
+    :param music_volume: float; 0-1, volume the music is currently playing in
+    :param bu_bg_color: tup(int, int, int); background color of start buttons
     """
     global resizable
-    resizable = pygame.constants.RESIZABLE
-    color_writing_end_b = (125, 125, 255)  # setzt die Farbe der Schrift auf den Endknoepfen auf grau
-    # setzt die Groesse der Oberflaeche auf die Groesse des Bildschirms
-    set_screen_size(get_screen_size_full_screen()[0], get_screen_size_full_screen()[1])
-    _init_window(resource_path)  # initializes the window the game is played in
-    field_size = get_window_size(global_width, global_height)[2]  # erhaelt die Groesse eines Feldes
-    pf.__init__playfield(orientation, field_size, field_count_x, field_count_y)  # initialisiert das Spielfeld
-    bu.__init__buttons(language, color_writing_start, color_writing_end_b, field_size, bu_bg_color)  # initialisiert die Knoepfe
-    sl.create_slider(field_size, sound_volume, music_volume)
+    global space_new
+    global ocean_new
+    global drawn_new
+    space_new = drawn_new = ocean_new = True
+    resizable = pygame.constants.FULLSCREEN  # starts game in full screen
+    color_writing_end_b = (125, 125, 255)  # sets color on end buttons to blue
+    set_screen_size(get_screen_size_full_screen()[0], get_screen_size_full_screen()[1])  # sets size of window
+    _init_window(resource_path, language)  # initializes the window the game is played in
+    field_size, orientation = get_window_size(global_width, global_height)[2:]  # gets size of one virtual field
+    # initializes buttons
+    bu.__init__buttons(language, color_writing_start, color_writing_end_b, field_size, bu_bg_color)
+    sl.create_slider(field_size, sound_volume, music_volume)  # intializes slider
+
+
+def __init__playfield(resource_path, load, language, orientation="height", field_count_x=10, field_count_y=10):
+    """
+    creates boards in playfield module and remaining ships table in tables module
+
+    :param resource_path: Func; returns resource path to a relative path
+    :param load: bool; game is loaded and not newly created
+    :param orientation: width/height depending on what is bigger
+    :param field_count_x: int; number of tiles per board in horizontal direction
+    :param field_count_y: int; number of tiles per board in vertical direction
+    """
+    field_size = get_window_size(global_width, global_height)[2]  # gets size of one virtual field
+    # initializes board
+    pf.__init__playfield(load, language, orientation, field_size, field_count_x, field_count_y, resource_path)
+    ta.create_remainings_table(field_size)  # initializes table displaying remaining ships
+
+
+def create_request_buttons(bg_color, writing_color, language):
+    """
+    creates request buttons labeled with 'New Game' and 'Load Game'
+
+    those buttons are used once after the beginning and before the actual game start
+
+    :param bg_color: tup(int, int, int); color of the buttons' backgrounds
+    :param writing_color: tup(int, int, int); writings' colors
+    :param language: str; language the program currently displays all writing in
+    """
+    bu.create_request_buttons(get_window_size(global_width, global_height)[2], bg_color, writing_color, language)
 
 
 # -------
-# gibt alle zu sehenden Dinge aus und laesst sie in einem Fenster sichtbar werden
-def _draw_background(screen, background, resource_path):
+# displays all visible things
+def _draw_background(screen, background, resource_path, language):
     """
-    gibt den Hintergrund auf der Oberflaeche aus
-    :param screen: Surface; die Oberflaeche, auf der alles zu sehen ist
-    :param background: str; gibt an, welches Bild als Hintergrundbild angezeigt wird
+    displays background
+
+    :param screen: Surface; surface covering the whole window
+    :param background: str; picture displayed as background
     :param resource_path: Func; returns the full resource path when given a relative path
-    :return: nothing
+    :param language: str; language all texts are currently dispalyed in
     """
-    if background == "ocean":  # ueberprueft, welches Hintergrundbild angezeigt werden soll
-        bg = pygame.image.load(resource_path("assets/images/ocean.jpg"))
+    global ocean_new
+    global space_new
+    global drawn_new
+    if background == "ocean":
+        try:
+            bg = pygame.image.load(resource_path("assets/images/ocean.jpg"))  # loads ocean picture
+        except pygame.error:  # picture flle is not found
+            if ocean_new:
+                ch.add_missing_message("ocean.jpg", resource_path("assets/images/"), language)
+                ocean_new = False
     elif background == "space":
-        bg = pygame.image.load(resource_path("assets/images/space.jpg"))
-    else:
-        bg = pygame.image.load(resource_path("assets/images/drawn.jpg"))  # laedt das gezeichnete Bild
-    screen.blit(bg, (0, 0))  # gibt das geladene Bild auf der Oberflaeche aus
+        try:
+            bg = pygame.image.load(resource_path("assets/images/space.jpg"))  # loads space picture
+        except pygame.error:  # picture file is not found
+            if space_new:
+                ch.add_missing_message("space.jpg", resource_path("assets/images/"), language)
+                space_new = False
+    else:  # background == "drawn"
+        try:
+            bg = pygame.image.load(resource_path("assets/images/drawn.jpg"))  # loads ugly picture
+        except pygame.error:  # pictue file is not found
+            if drawn_new:
+                ch.add_missing_message("drawn.jpg", resource_path("assets/images/"), language)
+                drawn_new = False
+    try:
+        screen.blit(bg, (0, 0))  # displays loaded picture
+    except NameError:  # loading a picture failed
+        screen.fill((0, 0, 0))  # fills screen black
 
 
 def _draw_ships(ship, screen, field_size, orientation, zustand):
     """
-    Gibt die Schiffe auf der Oberflaeche aus
-    :param zustand: str; gibt an, ob das Spiel bereits gespielt wird, oder sich noch am Start befindet
-    :param ship: list[list[Ship, ...], list]; enthaelt alle Schiffe
-    :param screen: Surface; Oberflaeche, auf der das Spiel ausgegebn wird
-    :param field_size: int; die Groeße eines virtuellen Feld,
-                           abhaengig von der Spielfeldgroesse und der Groesse des Bildschirms
-    :param orientation: str; gibt an, ob der Bildschirm eine größere Ausbreitung in die Breite oder in die Hoehe hat
+    displays all ships
+
+    :param zustand: str; start/ingame/settings, loop the program is curretnly in
+    :param ship: list[list[Ship, ...], list]; lsit with all ships
+    :param screen: Surface; surface covering the whole window
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param orientation: str; width/height depending on what is bigger
     """
-    small_field_count_x, small_field_count_y = pf.get_small_fieldcounts()  # erhaelt die Feldgroesse eines Spielfeldes
-    if zustand == "ingame":  # ueberprueft, ob das Spiel bereits gespielt wird
-        for thing in ship:
-            for shiplist in ship:  # geht alle Schiffe durch
-                for realship in shiplist:
-                    # gibt das Schiff auf der Oberflaeche aus
-                    realship.draw(screen, field_size, orientation, small_field_count_x, small_field_count_y)
+    if zustand == "ingame":  # game is currently played and boards are displayed
+        # gets number of tiles per board
+        small_field_count_x, small_field_count_y = pf.get_small_fieldcounts()
+        for shiplist in ship:
+            for realship in shiplist:  # goes through every ship
+                realship.draw(screen, field_size, orientation, small_field_count_x, small_field_count_y)  # displays it
 
 
 def draw_screen(zustand, background, language, ship, resource_path, task_number=-1):
     """
-    gibt alle zu sehenden Dinge auf der Oberflaeche aus
-    :param zustand: str; gibt an, ob das Spiel bereits gespielt wird, oder sich noch am Start befindet
-    :param background: str; gibt an, welches Bild als Hintergrundbild angezeigt wird
-    :param language: str; aktuelle Sprache, in der der text ausgegeben wird
-    :param ship: list[Ship, Ship, ...]; Liste mit allen Schiffen
+    displays all visible things on the game window
+
+    used in every occasion when window is changed except for request screens
+
+    :param zustand: str; start/ingame/settings, loop the program is curretnly in
+    :param background: str; picture currently used as background
+    :param language: str; language all texts are currently displayed in
+    :param ship: list[list[Ship, Ship, ...], list]; list with all ships on the board
     :param resource_path: Func; returns the full resource path when given a relative path
-    :param task_number: int; Nummer der aktuell durch das Programm zu bearbeitenden Aufgabe
+    :param task_number: int; number referring to curretn task, for example volume
     """
     screen = g_screen
-    screen.fill((0, 0, 0))
-    field_size, orientation = get_window_size(global_width, global_height)[2:]  # erhaelt die Groesse eines Feldes
-    _draw_background(screen, background, resource_path)  # gibt den Hintergrund auf der Oberflaeche aus
-    _draw_ships(ship, screen, field_size, orientation, zustand)  # gibt die Schiffe auf der Oberflaeche aus
-    pf.draw_playfield(screen, field_size, zustand)  # gibt das Spielfeld auf der Oberflaeche aus
-    bu.refresh_buttons(task_number, orientation, language, zustand)  # setzt die Knoepfe neu
-    bu.draw_buttons(screen)  # gibt die Knoepfe auf der Oberflaeche aus
+    screen.fill((0, 0, 0))  # fills the screen black
+    field_size, orientation = get_window_size(global_width, global_height)[2:]  # gets values
+    _draw_background(screen, background, resource_path, language)  # dispalys background
+    _draw_ships(ship, screen, field_size, orientation, zustand)  # displays ships
+    pf.draw_playfield(screen, field_size, zustand)  # dispalys the board
+    ch.draw_chat(screen, zustand)  # shows the chat
+    if orientation == "width" and zustand == "ingame":
+        ta.draw_tables(language, screen, ship)  # shows all tables, currently only remaining ships
+    bu.refresh_buttons(task_number, orientation, language, zustand)  # updates buttons' writings
+    bu.draw_buttons(screen)  # displays buttons
     sl.refresh_slides(task_number)  # refreshes active of slides
     sl.draw_slides(screen, field_size)  # displays sliders on the GUI
-    pygame.display.flip()  # updated das Display, damit alle vorher auf der Oberflaeche ausgegeben Dinge sichtbar sind
+    pygame.display.flip()  # updates display to display displayed things
 
 
-def draw_end(winner, resource_path):
+def draw_request(writing_color):
+    """
+    draws a request screen, currently only used to request for a game load
+
+    :param writing_color: tup(int, int, int); current writing_color of used theme
+    """
+    screen = g_screen
+    screen.fill(writing_color)  # fills the screen with the writing_color
+    bu.draw_request_buttons(screen)  # draws the buttons
+    pygame.display.flip()
+
+
+def draw_end(winner, resource_path, language):
     """
     shows the end screen
+
     :param winner: int; player who won the game, 1 is the enemy and 0 is the player
     :param resource_path: Func; return teh reource path of a relative path
+    :param language: str; language all texts are currently displayed in
     """
-    sound = pygame.mixer.Sound(resource_path("assets/sounds/windowsxp.wav"))
-    sound.play()
+    try:
+        sound = pygame.mixer.Sound(resource_path("assets/sounds/windowsxp.wav"))  # gets windows xp shut down sound
+    except FileNotFoundError:  # sound file is not found
+        ch.add_missing_message("windowsxp.wav", resource_path("assets/sounds/"), language)
+    else:  # sound file is found
+        sound.play()  # plays windows xp shut down sound
     if winner == 1 or winner == 0:  # checks, whether a winner was determined
-        screen = pygame.display.set_mode((int(global_width), int(global_height)), FULLSCREEN)  # sets new surface
+        screen = pygame.display.set_mode((0, 0), FULLSCREEN)  # sets new surface
         field_size = get_window_size(global_width, global_height)[2]  # gets size of one virtual field
-        pygame.draw.rect(screen, (0, 0, 0), (0, 0, global_width, global_height), 0)  # draws a black background
-        if winner == 0:  # checks, whter the player has won
+        screen.fill((0, 0, 0))  # draws a black background
+        if winner == 0:  # player has won
             screen.blit(pygame.font.SysFont(None, int(field_size * 3)).render("You won!!!", False, (0, 125, 0)),
                         (field_size * 3, field_size * 5))  # shows "You won!!!" in green
-        elif winner == 1:  # checks, whter the enemy has won
+        elif winner == 1:  # enemy has won
             screen.blit(pygame.font.SysFont(None, int(field_size * 3)).render("You lost :´(", False, (125, 0, 0)),
                         (field_size * 3, field_size * 5))  # shows "You lost :´(" in red
-        pygame.display.update()  # updates the window
+        pygame.display.flip()  # updates the window
     time.sleep(3)  # waits 3 seconds
 
 
 # -------
-# setzt die Koordinaten aller zu sehenden Dinge neu
+# updates locations of visible things
 def refresh_loc_coords(field_size, orientation, zustand):
     """
     refreshes the locations of visible things shown in the GUI
+
     :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     :param orientation: str; width/height, depending on what is bigger
     :param zustand: str; ingame/start/settings, depending on what the program is doing
     """
-    pf.refresh_loc_small_fields(field_size, orientation)  # refreshes the small-fields' coordiantes
-    pf.refresh_loc_big_fields(field_size, orientation)  # refreshes the big-fields' coordiantes
-    pf.refresh_loc_writings(field_size, orientation)  # refreshes the writings' coordinates
+    if zustand == "ingame":  # game is currently played
+        pf.refresh_loc_small_fields(field_size, orientation)  # refreshes the small-fields' coordiantes
+        pf.refresh_loc_big_fields(field_size, orientation)  # refreshes the big-fields' coordiantes
+        pf.refresh_loc_writings(field_size, orientation)  # refreshes the writings' coordinates
+        ch.refresh_loc(field_size, orientation)  # refreshes the chat's coordinates
+        ta.refresh_loc(field_size)  # refreshes table's coordinates
     bu.refresh_loc_buttons(field_size, orientation, zustand)  # refreshes the buttons' coordinates
     bu.refresh_loc_writing(field_size, zustand)  # refreshes the button-writings' coordinates
     sl.refresh_loc_sliders(field_size)  # refreshes the sliders' coordiantes
 
 
-def set_windowed(l_resizable, resource_path):
-    global resizable
-    pygame.display.quit()
-    resizable = l_resizable
-    _init_window(resource_path)
+def set_windowed(l_resizable, resource_path, language):
+    """
+    updates to game to either be windowed or fullscreen
+    :param l_resizable: int; pg.FULLSCREEN or pg.RESIZABLE
+    :param resource_path: Func; returns a resource path to a relative path
+    :param language: str; language all texts are curently displayed in
+    """
+    global resizable  # global variable keeping ttrack of window type
+    pygame.display.quit()  # closes window
+    resizable = l_resizable  # updates window's attribute
+    _init_window(resource_path, language)  # opens a new window with updated attribute
 
 
 def unclick(field):
     """
     unclicks a field
     :param field: list[int, int]; coordiantes of the field
-    :return: nothing
     """
     pf.unclick(field)
 
 
 def change_button_color(writing_color, bg_color):
+    """
+    updates in game buttons' appearance
+
+    :param writing_color: tup(int, int, int); new writing color for the buttons
+    :param bg_color: tup(int, int, int); new background color for the buttons
+    """
     bu.change_button_color(writing_color, bg_color)
 
 
 def get_small_fields():
     """
-    returns the small fields
+    returns the boards' tiles
     :return: list[list[SmallField, ...], list, ...]; list with the small fields
     """
     return pf.get_small_fields()
@@ -244,11 +345,34 @@ def get_small_fields():
 
 def get_buttons():
     """
-    returns the buttons
+    returns start and in game buttons
     :return: list[list[Button, ...], list[Button, ...]; list with all buttons
     """
     return bu.get_buttons()
 
 
+def get_request_buttons():
+    """
+    returns request buttons
+    used to determine a click on them while request loop is running
+
+    :return: list[Button, Button]; list with request buttons
+    """
+    return bu.get_request_buttons()
+
+
 def get_slides():
+    """"
+    :return: list[Slider, Slider]; lsit with volume sliders, used to determine change to volume
+    """
     return sl.get_sliders()
+
+
+def save_playfield(resource_path, language):
+    """
+    saves the playfield, used to continue games after closing the program
+
+    :param resource_path: Func; returns the resource path to a relative path
+    :param language: language all texts are currently displayed in
+    """
+    pf.save_playfield(resource_path, language)
