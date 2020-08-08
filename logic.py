@@ -1,4 +1,5 @@
 import input as ip  # converts input into usable data
+import chat
 import visual_output as vo  # GUI
 import pygame  # used to recieve player input and create GUI
 import save  # used to save/load settings
@@ -14,6 +15,8 @@ def _get_button_return(x_coord, y_coord, inputtype, resource_path, clicked_field
     returns, what is supposed to be returned to the main module from do_button_mouse_ingame
     :param x_coord: int; x coord of the clicked field
     :param y_coord: int; y coord of the clicked field
+    :param inputtype: str; mouse/keyboard
+    :param resource_path: Func; returns a resource path to a relative path
     :param clicked_field: list[int, int]; previously clicked field
     :return: list[int, int, bool, int, int]; new clicked field, whether a field was hit, hit field
     """
@@ -25,14 +28,27 @@ def _get_button_return(x_coord, y_coord, inputtype, resource_path, clicked_field
         return -1, -1, True, x_coord, y_coord
 
     else:
-        hit_small_field(1, x_coord, y_coord, resource_path, sound_volume)  # clicks a new field
+        hit_small_field(1, x_coord, y_coord, resource_path, sound_volume, get_language())  # clicks a new field
         # returns the new clicked field, whether a field was hit, and the hit field
         return x_coord, y_coord, False, -1, -1
 
 
-def _get_button_return_ingame(button, end, do_settings, inputtype, resource_path, clicked_field="string"):
-    if button:  # checks, whether something was pressed
-        # checks, whether a field or button was pressed
+def _get_button_return_ingame(button, inputtype, resource_path, clicked_field="string", save_game=()):
+    """
+    evaluates return values getting returned to the main module
+
+    when button is pressed, executes its feature
+
+    :param button: list[str, str] or list[str, int, int]; button/field and the pressed button/field
+    :param inputtype: str; mouse/keyboard, depending on input leading here
+    :param resource_path: Func; returns the resource path to a relative path
+    :param clicked_field: list[int, int]; previously clicked field
+    :param save_game: Func; saves the game
+    :return: list[int, int, bool, int, int] or None; clicked field, whether a field is targeted, targeted field
+     or control values
+    """
+    if button:  # checks whether something was pressed
+        # checks whether a field or button was pressed
         if str(button[0]) == "field":
             # returns the new clicked field, whether a field was hit, and the hit field
             return _get_button_return(button[1], button[2], inputtype, resource_path, clicked_field)
@@ -40,65 +56,87 @@ def _get_button_return_ingame(button, end, do_settings, inputtype, resource_path
         elif str(button[0]) == "button":
             # checks type of button
             if str(button[1]) == "end":
-                end(1)  # ends the game, if end button was pressed
+                return "end"  # ends the game
             elif str(button[1]) == "settings":
-                do_settings()
+                return "settings"
+            elif str(button[1]) == "save":
+                save_game()
 
 
 def _play_click_sound(resource_path):
-    channel = pygame.mixer.Channel(1)
-    sound = pygame.mixer.Sound(resource_path("assets/sounds/click.wav"))
-    sound.set_volume(sound_volume)
-    channel.play(sound)
-
-
-def do_button_mouse_ingame(xcoord, ycoord, field_size, end_buttons, end, do_settings, clicked_field, resource_path):
     """
-    setzt die Anweisung eines gedrueckten Knopfes um oder trifft ein kleines Feld
+    plays a clicking sound everytime mouse input is recognized
+
+    :param resource_path: Func; returns the resource path to a relative path
+    """
+    channel = pygame.mixer.Channel(1)  # chooses channel for mouse sound
+    try:
+        sound = pygame.mixer.Sound(resource_path("assets/sounds/click.wav"))  # takes the mouse sound
+    except FileNotFoundError:
+        chat.add_missing_message("click.wav", resource_path("assets/sounds/"), get_language())
+    else:
+        sound.set_volume(sound_volume)  # sets the volume to the current sound volume
+        channel.play(sound)  # plays mouse sound
+
+
+def do_button_mouse_ingame(xcoord, ycoord, field_size, end_buttons, clicked_field, resource_path,
+                           save_game):
+    """
+    executes feature of a button or clicks/hits a field
+
     :param xcoord: int; x coordinate of the click
     :param ycoord: int; y coordinate of the click
     :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     :param end_buttons: list[Button, Button]; Liste mit den Endknoepfen
-    :param end: Func; ends the game
-    :param do_settings: Func; enables change of settings ingame
     :param clicked_field: list[int, int]; previously clicked field
-    :param resource_path: Func; return the resource path to a relative path
+    :param resource_path: Func; returns the resource path to a relative path
+    :param save_game: Func; saves the game
     :return: list[int, int, bool, int, int]; new clicked field, whether a field was hit, hit field
     """
     button = ip.get_button_ingame_mouse(xcoord, ycoord, field_size, end_buttons)  # gets pressed thing
     _play_click_sound(resource_path)
     # returns the new clicked field, whether a field was hit, and the hit field
-    return _get_button_return_ingame(button, end, do_settings, "mouse", resource_path, clicked_field)
+    return _get_button_return_ingame(button, "mouse", resource_path, clicked_field, save_game)
 
 
 def _play_tastatur_sound(resource_path):
-    channel4 = pygame.mixer.Channel(3)
-    sound = pygame.mixer.Sound(resource_path("assets/sounds/tastatur.wav"))
-    sound.set_volume(sound_volume)
-    channel4.play(sound)
+    """
+    plays a clicking sound everytime keyborad input is recognized
+
+    :param resource_path: Func; returns the resource path to a relative path
+    """
+    channel4 = pygame.mixer.Channel(3)  # chooses channel for keyboard sound
+    try:
+        sound = pygame.mixer.Sound(resource_path("assets/sounds/tastatur.wav"))  # takes the keyboard sound
+    except FileNotFoundError:
+        chat.add_missing_message("tastatur.wav", resource_path("assets/sounds/"), get_langauge())
+    else:
+        sound.set_volume(sound_volume)  # sets the volume to the current sound volume
+        channel4.play(sound)  # plays keyboard sound
 
 
-def do_button_ingame_keyboard(pressed_key, end, do_settings, resource_path):
+def do_button_ingame_keyboard(pressed_key, resource_path):
     """
     carries out use of a button or hits a small field
     :param pressed_key: Key; pressed key
-    :param end: Function; ends the game
-    :param do_settings: enables the change of settings in game
     :param resource_path: Func; return the resource path to a relative path
     :return: list[int, int, bool, int, int]; new clicked field, whether a field was hit, hit field
     """
     button = ip.get_button_ingame_keyboard(pressed_key)
     _play_tastatur_sound(resource_path)
     # returns the new clicked field, whether a field was hit, and the hit field
-    return _get_button_return_ingame(button, end, do_settings, "keyboard", resource_path)
+    return _get_button_return_ingame(button, "keyboard", resource_path)
 
 
 def goto_volume():
+    """
+    enabels volume adjustments
+    """
     global aufgabe
     aufgabe = "volume"
 
 
-def do_button_start(xcoord, ycoord, field_size, start_buttons, end, resource_path):
+def do_button_start(xcoord, ycoord, field_size, start_buttons, resource_path):
     """
     fuhrt einen Knopf am Start aus
     :param xcoord: int; x-Koordinate des Mausklicks
@@ -106,6 +144,7 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, end, resource_pat
     :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     :param start_buttons: list[Button, Button, ...]; Liste mit den Startknoepfen
     :param end: Function; beendet das Spiel
+    :param resource_path: Func; returns resource path to a relative path
     """
     _play_click_sound(resource_path)
     # erhaelt den angeklickten Knopf in den Einstellungen
@@ -122,9 +161,12 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, end, resource_pat
         elif button == 4:
             goto_choose_rules()  # Regeln koennen geaendert werden
         elif button == 5:
-            os.startfile(resource_path('assets/help.pdf'))  # opens the pdf that explains the game
+            try:
+                os.startfile(resource_path('assets/help.pdf'))  # opens the pdf that explains the game
+            except FileNotFoundError:
+                chat.add_missing_message("help.pdf", resource_path('assets/'), get_language())
         elif button == 6:
-            end(2)
+            return "end"
 
     elif aufgabe == "main" and zustand == "settings":
         if button == 1:
@@ -134,18 +176,21 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, end, resource_pat
         elif button == 3:
             goto_choose_rules()  # Regeln koennen geaendert werden
         elif button == 4:
-            os.startfile(resource_path('assets/help.pdf'))  # opens the pdf that explains the game
+            try:
+                os.startfile(resource_path('assets/help.pdf'))  # opens the pdf that explains the game
+            except FileNotFoundError:
+                chat.add_missing_message("help.pdf", resource_path('assets/'), get_language())
         elif button == 5:
             goto_volume()
         elif button == 6:
-            end(1)
+            return "end"
 
     elif aufgabe == "difficulty":
         # wenn die Schwierigkeit ausgewaehlt wird, Schwierigkeit auf neue Schwierigkeit umstellen
         if button == 1:
             set_difficulty("easy", resource_path)
         elif button == 2:
-            set_difficulty("medium", resourve_path)
+            set_difficulty("medium", resource_path)
         elif button == 3:
             set_difficulty("impossible", resource_path)
         elif button == 4:
@@ -155,10 +200,10 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, end, resource_pat
         # wenn das Hintergrundbild geaendert wird, dieses aendern, wenn Art der Oberflaeche geaendert
         # wird, diese veraendern
         if button == 1:
-            vo.set_windowed(pygame.FULLSCREEN, resource_path)
+            vo.set_windowed(pygame.FULLSCREEN, resource_path, get_language())
             set_aufgabe("main")
         elif button == 2:
-            vo.set_windowed(pygame.RESIZABLE, resource_path)
+            vo.set_windowed(pygame.RESIZABLE, resource_path, get_language())
             set_aufgabe("main")
         elif button == 3:
             set_aufgabe("background")
@@ -207,6 +252,8 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, end, resource_pat
         elif button == 4:
             set_aufgabe('main')
 
+    return button - 1
+
 
 def get_task_number():
     """gibt je nach Aufgabe die dazu passende Nummer zurück"""
@@ -229,13 +276,20 @@ def get_task_number():
 def set_background(bg, resource_path):
     global background
     background = bg
-    save.save(background, "str", "logic", 1, resource_path, 'settings/')
+    try:
+        save.save(background, "str", "logic", 1, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic1.str", resource_path("saves/settings/"), get_language(), False)
     set_aufgabe('main')
 
 
 def load_background(resource_path):
     global background
-    background = save.load("str", "logic", 1, resource_path, 'settings/')
+    try:
+        background = save.load("str", "logic", 1, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic1.str", resource_path("saves/settings/"), get_language())
+        background = "space"
 
 
 def get_background():
@@ -251,13 +305,20 @@ def set_rule(rules, resource_path):
     # setzt die Regeln auf das Angeklickte
     global rule
     rule = rules
-    save.save(rule, "int", "logic", 6, resource_path, 'settings/')
+    try:
+        save.save(rule, "int", "logic", 6, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic6.int", resource_path("saves/settings/"), get_language(), False)
     set_aufgabe("main")
 
 
 def load_rule(resource_path):
     global rule
-    rule = save.load("str", "logic", 5, resource_path, 'settings/')
+    try:
+        rule = save.load("int", "logic", 6, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic6.int", resource_path("saves/settings/"), get_language())
+        rule = 1
 
 
 def get_rule():
@@ -274,13 +335,20 @@ def set_language(sprache, resource_path):
     """
     global language
     language = sprache
-    save.save(language, "str", "logic", 5, resource_path, 'settings/')
+    try:
+        save.save(language, "str", "logic", 5, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic5.str", resource_path("saves/settings/"), get_language(), False)
     set_aufgabe('main')
 
 
 def load_language(resource_path):
     global language
-    language = save.load("str", "logic", 5, resource_path, 'settings/')
+    try:
+        language = save.load("str", "logic", 5, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic5.str", resource_path("saves/settings/"), "english")
+        language = "english"
 
 
 def get_language():
@@ -318,13 +386,20 @@ def set_difficulty(difficult, resource_path):
     # setzt die neue Schwierigkeit
     global difficulty
     difficulty = difficult
-    save.save(difficulty, "str", "logic", 4, resource_path, 'settings/')
+    try:
+        save.save(difficulty, "str", "logic", 4, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic4.str", resource_path("saves/settings/"), get_language(), False)
     set_aufgabe("main")
 
 
 def load_difficulty(resource_path):
     global difficulty
-    difficulty = save.load("str", "logic", 4, resource_path, 'settings/')
+    try:
+        difficulty = save.load("str", "logic", 4, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic4.str", resource_path("saves/settings/"), get_language())
+        difficulty = "medium"
 
 
 def get_difficulty():
@@ -335,23 +410,37 @@ def get_difficulty():
 def set_sound_volume(volume, resource_path):
     global sound_volume
     sound_volume = volume
-    save.save(sound_volume, "flo", "logic", 3, resource_path, 'settings/')
+    try:
+        save.save(sound_volume, "flo", "logic", 3, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic3.flo", resource_path("saves/settings/"), get_language(), False)
 
 
 def set_music_volume(volume, resource_path):
     global music_volume
     music_volume = volume
-    save.save(music_volume, "flo", "logic", 2, resource_path, 'settings/')
+    try:
+        save.save(music_volume, "flo", "logic", 2, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic2.flo", resource_path("saves/settings/"), get_language(), False)
 
 
 def load_music_volume(resource_path):
     global music_volume
-    music_volume = save.load("flo", "logic", 2, resource_path, 'settings/')
+    try:
+        music_volume = save.load("flo", "logic", 2, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic2.flo", resource_path("saves/settings/"), get_language())
+        music_volume = 0.4
 
 
 def load_sound_volume(resource_path):
     global sound_volume
-    sound_volume = save.load("flo", "logic", 3, resource_path, 'settings/')
+    try:
+        sound_volume = save.load("flo", "logic", 3, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic3.flo", resource_path("saves/settings/"), get_language())
+        sound_volume = 0.4
 
 
 def get_music_volume():
@@ -364,7 +453,11 @@ def get_sound_volume():
 
 def set_writing_color_start(resource_path, number):
     global writing_color_start
-    writing_color_start = save.load("tup", "logiccol", number, resource_path, 'settings/')
+    try:
+        writing_color_start = save.load("tup", "logiccol", number, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logiccol" + str(number) + ".tup", resource_path("saves/settings/"), get_language())
+        writing_color_start = (0, 0, 0)
 
 
 def get_writing_color_start():
@@ -373,7 +466,11 @@ def get_writing_color_start():
 
 def set_background_color_start(resource_path, number):
     global writing_color_bg
-    writing_color_bg = save.load("tup", "logicbac", number, resource_path, 'settings/')
+    try:
+        writing_color_bg = save.load("tup", "logicbac", number, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logicbac" + str(number) + ".tup", resource_path("saves/settings/"), get_language())
+        writing_color_bg = (255, 255, 255)
 
 
 def get_background_color_start():
@@ -381,7 +478,10 @@ def get_background_color_start():
 
 
 def set_theme(resource_path, number):
-    save.save(number, 'int', 'logic', 7, resource_path, 'settings/')
+    try:
+        save.save(number, 'int', 'logic', 7, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic7.int", resource_path("saves/settings/"), get_language(), False)
     load_theme(resource_path, number)
     vo.change_button_color(writing_color_start, writing_color_bg)
 
@@ -431,13 +531,17 @@ def goto_difficulty():
 def __init__logic(resource_path):
     global aufgabe
     global zustand
-    theme_number = save.load('int', 'logic', 7, resource_path, 'settings/')
+    load_language(resource_path)
+    try:
+        theme_number = save.load('int', 'logic', 7, resource_path, 'settings/')
+    except FileNotFoundError:
+        chat.add_missing_message("logic7.int", resource_path("saves/settings/"), get_language())
+        theme_number = 1
     load_theme(resource_path, theme_number)
     load_background(resource_path)
     load_music_volume(resource_path)
     load_sound_volume(resource_path)
     load_difficulty(resource_path)
-    load_language(resource_path)
     load_rule(resource_path)
     aufgabe = "main"
     zustand = "start"
