@@ -1,7 +1,10 @@
 # import fixed
 import random as rd
 import pygame
+import save
+import chat
 from playfield import hit_small_field
+from translation import get_dict
 # TODO Modul sortieren
 RED = (255, 0, 0)
 
@@ -71,6 +74,14 @@ class Ship:
                 pygame.draw.rect(screen, color,  # displays the ship segment on the GUI
                                  (x_coord, y_coord, field_size, field_size), 0)
 
+    def is_destroyed(self):
+        count = 0
+        for position in self.list_pos():
+            if position[2] != 3:
+                count += 1
+        if count == self.list_pos().__len__():
+            return True
+
 
 class Kreuzer5(Ship):
     """
@@ -102,6 +113,7 @@ class Kreuzer5(Ship):
         self.pos3 = pos3
         self.pos4 = pos4
         self.pos5 = pos5
+        self.name = "CruiseShip"
 
     def list_pos(self):
         """
@@ -156,6 +168,7 @@ class ContainerShip4(Ship):
         self.pos2 = pos2
         self.pos3 = pos3
         self.pos4 = pos4
+        self.name = "ContainerShip"
 
     def list_pos(self):
         """
@@ -206,6 +219,7 @@ class ShipShip3(Ship):
         self.pos1 = pos1
         self.pos2 = pos2
         self.pos3 = pos3
+        self.name = "ShipShip"
 
     def list_pos(self):
         """
@@ -252,6 +266,7 @@ class FisherShip2(Ship):
                       player)  # initializes the super class
         self.pos1 = pos1
         self.pos2 = pos2
+        self.name = "FisherShip"
 
     def list_pos(self):
         """
@@ -275,6 +290,16 @@ class FisherShip2(Ship):
         self.pos2 = poslist[1]
 
 
+def set_ship_count(count):
+    """
+    sets the number of ships
+
+    used to create ships and their positions as well as checking for win
+    """
+    global ship_count
+    ship_count = count
+
+
 def __init__shipcheck():
     """
     creates a list that checks, where a ship has been placed,
@@ -290,20 +315,15 @@ def __init__shipcheck():
                 ship_check[t][x].append(0)
 
 
-def set_ship_count(count):
+def __init__ship(load):
     """
-    sets the number of ships
+    initializes ship method
 
-    used to create ships and their positions as well as checking for win
+    :param load: bool; whether game is loaded or a new one is created
     """
-    global ship_count
-    ship_count = count
-
-
-def __init__ship():
-    """initializes ship method"""
     set_ship_count(10)  # sets the ship count to ten, because curretly ten ships are created
-    __init__shipcheck()  # inititalizes a list to check where a ship has been placed
+    if not load:
+        __init__shipcheck()  # inititalizes a list to check where a ship has been placed
 
 
 def _get_rand_pos(y, x, length):
@@ -425,41 +445,52 @@ def _set_rand_pos():
                     testing = True
 
 
-def set_ships():
+def set_ships(load, resource_path, language):
     """
-    creates ships as Ship, in a wway thast the player's ships are in ship[0] and the enemy's ships are in ship[1]
+    creates ships as Ship, in a way that the player's ships are in ship[0] and the enemy's ships are in ship[1]
     and places all ships on random locations on the playfield
 
     Ship is a ship that can be hit, located on the playfield and shown in the GUI
 
     used once in the beginning of the game
+
+    :param load: bool; whether game is loaded or a new one is created
+    :param resource_path: Func; returns the resource_path to a relative_path
+    :param language: str; language all texts are currently displayed in
     """
     global ship
-    ship = []
-    for i in range(2):
-        # creates two lists, which later contain the ships
-        ship.append([])
-        for j in range(ship_count):
-            ship[i].append(0)
-        # creates ten ships for each player that are intact, but are not yet located anywhere on the playfield
-        for j in range(4):  # creates four ships as FisherShip2, a Ship with two segments
-            ship[i][j] = FisherShip2([-1, -1, 3], [-1, -1, 3], identification_number=j + 1, player=i)
-        for j in range(3):  # creates three ships as FisherShip2, a Ship with three segments
-            d = j + 4
-            ship[i][d] = ShipShip3([-1, -1, 3], [-1, -1, 3], [-1, -1, 3], identification_number=d + 1, player=i)
-        # creates two ships as ContainerShip4, a Ship with four segments
-        ship[i][7] = ContainerShip4([-1, -1, 3], [-1, -1, 3], [-1, -1, 3], [-1, -1, 3],
-                                    identification_number=8, player=i)
-        ship[i][8] = ContainerShip4([-1, -1, 3], [-1, -1, 3], [-1, -1, 3], [-1, -1, 3],
-                                    identification_number=9, player=i)
-        # creates one ship as Kreuzer5, a ship wih five segments
-        ship[i][9] = Kreuzer5([-1, -1, 3], [-1, -1, 3], [-1, -1, 3], [-1, -1, 3], [-1, -1, 3],
-                              identification_number=10, player=i)
-    # TODO allow players to select positions
-    _set_rand_pos()  # sets all ships to random positions
+    if load:
+        try:
+            ship = save.load('lis', 'ship', 1, resource_path)
+        except FileNotFoundError:
+            chat.add_missing_message("ship1.lis", resource_path("saves/"), language)
+            return True
+    else:
+        ship = []
+        for i in range(2):
+            # creates two lists, which later contain the ships
+            ship.append([])
+            for j in range(ship_count):
+                ship[i].append(0)
+            # creates ten ships for each player that are intact, but are not yet located anywhere on the playfield
+            for j in range(4):  # creates four ships as FisherShip2, a Ship with two segments
+                ship[i][j] = FisherShip2([-1, -1, 3], [-1, -1, 3], identification_number=j + 1, player=i)
+            for j in range(3):  # creates three ships as FisherShip2, a Ship with three segments
+                d = j + 4
+                ship[i][d] = ShipShip3([-1, -1, 3], [-1, -1, 3], [-1, -1, 3], identification_number=d + 1, player=i)
+            # creates two ships as ContainerShip4, a Ship with four segments
+            ship[i][7] = ContainerShip4([-1, -1, 3], [-1, -1, 3], [-1, -1, 3], [-1, -1, 3],
+                                        identification_number=8, player=i)
+            ship[i][8] = ContainerShip4([-1, -1, 3], [-1, -1, 3], [-1, -1, 3], [-1, -1, 3],
+                                        identification_number=9, player=i)
+            # creates one ship as Kreuzer5, a ship wih five segments
+            ship[i][9] = Kreuzer5([-1, -1, 3], [-1, -1, 3], [-1, -1, 3], [-1, -1, 3], [-1, -1, 3],
+                                  identification_number=10, player=i)
+        # TODO allow players to select positions
+        _set_rand_pos()  # sets all ships to random positions
 
 
-def check_ship_status(end):
+def check_ship_status():
     """
     ueberprueft, ob ein Schiff zerstoert ist, und ob alle Schiffe eines Spielers zerstoert sind
     """
@@ -472,7 +503,8 @@ def check_ship_status(end):
                 check += 1
         # wenn alle Schiffe eines Spielers zerstoert sind, endet das Spiel
         if check == get_ship_count():
-            end(1 - f)
+            return False, 1 - f
+    return True, 2
 
 
 def check_ship_pos(schiff, feld):
@@ -510,20 +542,54 @@ def get_ship():
     return ship
 
 
-def _play_hit_sound(resource_path, sound_volume):
+def _play_hit_sound(resource_path, sound_volume, language):
     """
     plays the sound that indicates a ship part being hit
 
     :param resource_path: Func; returns the resource path to a relative path
     :param sound_volume: float; 0 - 1, volume of sounds
+    :param language: str; language all texts are currently displayed in
     """
     channel3 = pygame.mixer.Channel(2)  # opens a channel
-    sound = pygame.mixer.Sound(resource_path("assets/sounds/hit.wav"))  # creates the sound as a Sound
-    sound.set_volume(sound_volume)  # sets the volume
-    channel3.play(sound)  # plays the sound once
+    try:
+        sound = pygame.mixer.Sound(resource_path("assets/sounds/hit.wav"))  # creates the sound as a Sound
+    except FileNotFoundError:
+        chat.add_missing_message("hit.wav", resource_path("assets/sounds/"), language)
+    else:
+        sound.set_volume(sound_volume)  # sets the volume
+        channel3.play(sound)  # plays the sound once
 
 
-def hit_something(xcoord, ycoord, player, resource_path, sound_volume, old_xcoord=-1, old_ycoord=-1):
+def _get_hit_message(play, success, language, hit_ship="", destroyed=False):
+    """
+    evaluates displayed message based on hit and player
+
+    :param play: int; player, 0 enemy 1 player
+    :param success: bool; ship was hit
+    :param language: str; language all wiritngs are currently displayed in
+    :param hit_ship: Ship, hit ship
+    :param destroyed: bool; ship was destroyed with that hit
+    :return: str, tup(int, int, int)
+    """
+    dictionary = get_dict(language, "message")  # sets dictionary
+    color = (0, 50, 125) if play else (125, 0, 0)  # sets a color based on the player
+    play = "Player" if play else "Enemy"  # sets player
+    player = dictionary[play]  # translates player
+    # sets message
+    if destroyed:  # a ship was destroyed
+        message = "destroyed"
+    elif success:  # a ship was hit
+        message = "success"
+    else:  # no ship was hit
+        message = "failure"
+    message = dictionary[message]  # translates message
+    if success:  # a ship was hit
+        # adds the ship and its number
+        hit_ship = hit_ship.name + " " + str(hit_ship.identification_number)
+    return player + message + hit_ship, color  # returns message and color
+
+
+def hit_something(xcoord, ycoord, player, resource_path, sound_volume, language, old_xcoord=-1, old_ycoord=-1):
     """
     hits whatever is on player, xcoord, ycoord
 
@@ -536,6 +602,7 @@ def hit_something(xcoord, ycoord, player, resource_path, sound_volume, old_xcoor
     :param player: int; player currently playing
     :param resource_path: Func; returns the resource path to a relative path
     :param sound_volume: float; 0 - 1, volume of sounds
+    :param language: str; language all wiritings are currently displayed in
     :param old_xcoord: int; x coordinate of the field that was hit previously
     :param old_ycoord: int; y coordinate of the field that was hit previously
     """
@@ -543,8 +610,9 @@ def hit_something(xcoord, ycoord, player, resource_path, sound_volume, old_xcoor
     for i in range(ship_count):
         # checks for every ship whether it is on the field
         if check_ship_pos(ship[player][i], (xcoord, ycoord))[0]:
+
             # hits the small field
-            hit_small_field(player, xcoord, ycoord, resource_path, sound_volume, old_xcoord, old_ycoord)
+            hit_small_field(player, xcoord, ycoord, resource_path, sound_volume, language, old_xcoord, old_ycoord)
             # gets the number of the hit ship part
             ship_part_number = check_ship_pos(ship[player][i], (xcoord, ycoord))[2]
             # changes the fird value of the hit ship part, thus marking it as destroyed
@@ -552,10 +620,15 @@ def hit_something(xcoord, ycoord, player, resource_path, sound_volume, old_xcoor
             positions_local[ship_part_number][2] = 1
             ship[player][i].change_pos(positions_local)
             # plays the sound that indicates a ship part being hit
-            _play_hit_sound(resource_path, sound_volume)
+            _play_hit_sound(resource_path, sound_volume, language)
+            destroyed = check_destroyed(i, player)
+            message, color = _get_hit_message(player, True, language, ship[player][i], destroyed)
+            chat.add_message(message, color)
             return
     # hits the small field regardless
-    hit_small_field(player, xcoord, ycoord, resource_path, sound_volume, old_xcoord, old_ycoord)
+    hit_small_field(player, xcoord, ycoord, resource_path, sound_volume, language, old_xcoord, old_ycoord)
+    message, color = _get_hit_message(player, False, language)
+    chat.add_message(message, color)
 
 
 def check_destroyed(ship_number, player):
@@ -592,3 +665,16 @@ def get_ship_positions():
     for x in ship[0]:
         ship_coordinates += x.list_pos()
     return ship_coordinates
+
+
+def save_ship(resource_path, language):
+    """
+    saves the ship so that they can be loaded to continue the game
+
+    :param resource_path: Func; returns the resource path to a relative path
+    :param language: str; language all texts are currently displayed in
+    """
+    try:
+        save.save(ship, 'lis', 'ship', 1, resource_path)
+    except FileNotFoundError:
+        chat.add_missing_message("hit.wav", resource_path("saves"), language, False)
