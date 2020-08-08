@@ -18,11 +18,18 @@ class Writing:
         self.top_left_corner = top_left_corner
         self.background = background
 
-    def draw(self, screen):
+    def draw(self, surface, centered=False):
         """
         places the writing visible on the GUI
-        :param screen: Surface; surface of the GUI
-        :return: nothing
+        :param surface: Surface; surface the writing is shown on
+        :param centered: bool; show writing with top left corner as center, used in tables.Table
         """
         # shows the writing
-        screen.blit(self.font.render(self.content, True, self.color, self.background), self.top_left_corner)
+        if centered:
+            # displays the writing centered with top left corner as center
+            rect = self.font.render(self.content, True, self.color,
+                                    self.background).get_rect(center=self.top_left_corner)
+            surface.blit(self.font.render(self.content, True, self.color, self.background), rect)
+        else:
+            # displays the writing with top left corner as top left corner
+            surface.blit(self.font.render(self.content, True, self.color, self.background), self.top_left_corner)
