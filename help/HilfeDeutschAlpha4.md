@@ -15,7 +15,7 @@ Die Einstellung der Schwierigkeit steht nur vor dem Beginn eines Spiels zur Verf
 Das Spiel kann im Fenster- und im Vollbildmodus gespielt werden. Außerdem können Hintergrund und das Aussehen der Einstellungsknöpfe angepasst werden.
 
 ## Sprache
-Das Spiel kann auf 3 Sprachen gespielt werden, Deutsch, Englisch und Latein. Bei der lateinisch Version ist zu beachten, dass einige Texte sehr gebrochen/unpassend wirken können, auch wenn sie verständlich ist.
+Das Spiel kann auf 3 Sprachen gespielt werden, Deutsch, Englisch und Latein. Bei der lateinischen Version ist zu beachten, dass einige Texte sehr gebrochen/unpassend wirken können, auch wenn sie verständlich ist.
 
 ## Sonstiges
 ### Hilfe
