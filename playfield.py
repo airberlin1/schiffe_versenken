@@ -7,13 +7,7 @@ import pygame
 import writing
 import save
 import chat
-
-# ------
-# sets tuples with used colors and the alphabet in alphabetic order to be displayed on top of the playfield
-RED = (255, 0, 0)
-GREY = (170, 170, 170)
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
+from constants import WHITE, BLACK, LIGHTRED, LIGHTGREY
 
 alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U",
             "V", "W", "X", "Y", "Z"]
@@ -150,7 +144,7 @@ class SmallField:
                              (self.location_coord_x, self.location_coord_y, field_size, field_size), 0)
 
         if self.hit_on:  # tile was hit
-            color = GREY
+            color = LIGHTGREY
             # dispalys grey cross on top of tile
             pygame.draw.line(screen, color, (self.location_coord_x + field_size,
                                              self.location_coord_y),
@@ -163,6 +157,7 @@ class SmallField:
         hits tile
         :param resource_path: Func; returns the resource path to a relative path
         :param sound_volume: float; volume of sounds
+        :param language: str; language all texts are currently displayed in
         """
         if self.hit_on:  # tile was hit previously
             self.clicked_on = False  # unclicks field, should not be required in any case
@@ -350,7 +345,7 @@ def _create_writings(field_size):
                                                        own_field, "width"))
 
 
-def __init__playfield(load, language, orienation, field_size, field_count_x, field_count_y, resource_path):
+def __init__playfield(load, language, orienation, field_size, field_count_x, field_count_y, resource_path, add_dir):
     """
     creates boards and their tiles as well as writing on boards' side
 
@@ -363,17 +358,18 @@ def __init__playfield(load, language, orienation, field_size, field_count_x, fie
     :param field_count_x: int; quantity of tiles on one board in horizontal direction
     :param field_count_y: int; quantity of tiles on one board in vertical direction
     :param resource_path: Func; returns the resource path to a relative path
+    :param add_dir: str; additional directory where loaded game is found
     """
     if load:  # saved game is loaded
         global big_fields
         global small_fields
         try:
-            big_fields = save.load('lis', 'playfield', 1, resource_path)  # loads both boards
+            big_fields = save.load('lis', 'playfield', 1, resource_path, add_dir)  # loads both boards
         except FileNotFoundError:
             chat.add_missing_message("playfield1.lis", resource_path("saves/"), language)
             return True
         try:
-            small_fields = save.load('lis', 'playfield', 2, resource_path)  # loads boards' tiles
+            small_fields = save.load('lis', 'playfield', 2, resource_path, add_dir)  # loads boards' tiles
         except FileNotFoundError:
             chat.add_missing_message("playfield2.lis", resource_path("saves/"), language)
             return True
@@ -423,24 +419,31 @@ def refresh_loc_writings(field_size, orientation):
 
 # -------
 # displays boards
-def draw_playfield(screen, field_size, zustand):
+def draw_playfield(screen, field_size, zustand, placement=False):
     """
     displays both boards and nubers and letters used to make the player be able to tell tiles apart
     :param screen: Surface; surface covering the whole game window
     :param field_size: float; size of a virtual fieldthat is determined by the size of the window that inhabits the GUI
     :param zustand: str; start/ingame/settings, used to determine loop the game is in currently
+    :param placement: bool; only players board is shown
     """
-    if zustand == "ingame":  # boards are displayed
+    if zustand == "ingame" or zustand == "placement":  # boards are displayed
+        counter = 0
         for big_field in big_fields:  # goes through boards
-            big_field.draw(screen)  # displays it
-
-        for z in range(2):
+            if not counter or not placement:
+                big_field.draw(screen)  # displays it
+            counter += 1
+        number = 2 - int(placement)
+        for z in range(number):
             for i in range(big_fields[z].field_count_x):
                 for j in range(big_fields[z].field_count_y):  # goes htrough every tile
                     small_fields[z][i][j].draw(screen, field_size)  # displays it
 
+        counter = 0
         for writing_local in playfield_writings:  # goes through every writing
-            writing_local.draw(screen, True)  # dispalys it
+            if not placement or counter < 20:
+                writing_local.draw(screen, True)  # dispalys it
+            counter += 1
 
 
 # ------
@@ -505,16 +508,17 @@ def get_small_fieldcounts():
 
 # ------
 # saves game
-def save_playfield(resource_path, language):
+def save_playfield(resource_path, language, add_dir):
     """
     saves the playfield, used to continue games after closing the program
 
     :param resource_path: Func; returns the resource path to a relative path
     :param language: str; language all texts are currently dispalyed in
+    :param add_dir: str; additional directory where loaded game is found
     """
     try:
-        save.save(big_fields, 'lis', 'playfield', 1, resource_path)  # saves board
+        save.save(big_fields, 'lis', 'playfield', 1, resource_path, add_dir)  # saves board
     except FileNotFoundError:
         chat.add_missing_message("", resource_path("saves/"), language, False)
     else:
-        save.save(small_fields, 'lis', 'playfield', 2, resource_path)  # saves tiles on the board
+        save.save(small_fields, 'lis', 'playfield', 2, resource_path, add_dir)  # saves tiles on the board
