@@ -2,7 +2,6 @@
 
 # TODO ships as pictures
 # TODO animate hits
-# TODO Chat to communicate savings, errors, hits
 
 # -------
 # imports pygame, used to display things
@@ -10,10 +9,11 @@
 import time  # wait 3 seconds in end screen
 import pygame  # display things
 from pygame.locals import *  # constants used in pygame
+from constants import DARKGREEN, DARKRED, BLACK  # colors used
 import buttons as bu  # display buttons
 import playfield as pf  # dispaly boards
 import slider as sl  # display sliders
-import chat as ch  # dispaly chat
+import chat as ch  # display chat
 import tables as ta  # display table
 
 
@@ -88,7 +88,7 @@ def _init_window(resource_path, language):
         ch.add_missing_message("icon.jpg", resource_path("assets/images/"), language)
     else:  # file is found
         pygame.display.set_icon(icon)  # creates an icon
-    pygame.display.set_caption("schiffe_versenken      v.alpha.3")  # creates a caption
+    pygame.display.set_caption("schiffe_versenken      v.alpha.4")  # creates a caption
     g_screen = pygame.display.set_mode(get_screen_size(), resizable)
 
 
@@ -124,21 +124,24 @@ def __init__visual_output(resource_path, language, color_writing_start, sound_vo
     # initializes buttons
     bu.__init__buttons(language, color_writing_start, color_writing_end_b, field_size, bu_bg_color)
     sl.create_slider(field_size, sound_volume, music_volume)  # intializes slider
+    ta.create_stats_table(field_size, resource_path)  # creates stats table
 
 
-def __init__playfield(resource_path, load, language, orientation="height", field_count_x=10, field_count_y=10):
+def __init__playfield(resource_path, load, language, orientation="height", add_dir="", field_count_x=10,
+                      field_count_y=10):
     """
     creates boards in playfield module and remaining ships table in tables module
 
     :param resource_path: Func; returns resource path to a relative path
     :param load: bool; game is loaded and not newly created
     :param orientation: width/height depending on what is bigger
+    :param add_dir: str; additional directory where loaded game is found
     :param field_count_x: int; number of tiles per board in horizontal direction
     :param field_count_y: int; number of tiles per board in vertical direction
     """
     field_size = get_window_size(global_width, global_height)[2]  # gets size of one virtual field
     # initializes board
-    pf.__init__playfield(load, language, orientation, field_size, field_count_x, field_count_y, resource_path)
+    pf.__init__playfield(load, language, orientation, field_size, field_count_x, field_count_y, resource_path, add_dir)
     ta.create_remainings_table(field_size)  # initializes table displaying remaining ships
 
 
@@ -153,6 +156,7 @@ def create_request_buttons(bg_color, writing_color, language):
     :param language: str; language the program currently displays all writing in
     """
     bu.create_request_buttons(get_window_size(global_width, global_height)[2], bg_color, writing_color, language)
+    bu.create_placement_buttons(get_window_size(global_width, global_height)[2], language)
 
 
 # -------
@@ -193,7 +197,7 @@ def _draw_background(screen, background, resource_path, language):
     try:
         screen.blit(bg, (0, 0))  # displays loaded picture
     except NameError:  # loading a picture failed
-        screen.fill((0, 0, 0))  # fills screen black
+        screen.fill(BLACK)  # fills screen black
 
 
 def _draw_ships(ship, screen, field_size, orientation, zustand):
@@ -206,12 +210,13 @@ def _draw_ships(ship, screen, field_size, orientation, zustand):
     :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     :param orientation: str; width/height depending on what is bigger
     """
-    if zustand == "ingame":  # game is currently played and boards are displayed
+    if zustand == "ingame" or zustand == "placement":  # game is currently played and boards are displayed
         # gets number of tiles per board
         small_field_count_x, small_field_count_y = pf.get_small_fieldcounts()
         for shiplist in ship:
             for realship in shiplist:  # goes through every ship
-                realship.draw(screen, field_size, orientation, small_field_count_x, small_field_count_y)  # displays it
+                # displays it
+                realship.draw(screen, field_size, orientation, small_field_count_x, small_field_count_y, zustand)
 
 
 def draw_screen(zustand, background, language, ship, resource_path, task_number=-1):
@@ -230,16 +235,38 @@ def draw_screen(zustand, background, language, ship, resource_path, task_number=
     screen = g_screen
     screen.fill((0, 0, 0))  # fills the screen black
     field_size, orientation = get_window_size(global_width, global_height)[2:]  # gets values
-    _draw_background(screen, background, resource_path, language)  # dispalys background
+
+    _draw_background(screen, background, resource_path, language)  # displays background
     _draw_ships(ship, screen, field_size, orientation, zustand)  # displays ships
-    pf.draw_playfield(screen, field_size, zustand)  # dispalys the board
+    pf.draw_playfield(screen, field_size, zustand)  # displays board
     ch.draw_chat(screen, zustand)  # shows the chat
-    if orientation == "width" and zustand == "ingame":
-        ta.draw_tables(language, screen, ship)  # shows all tables, currently only remaining ships
+    if orientation == "width" and zustand == "ingame":  # game is currently played
+        ta.draw_remainings(language, screen, ship)  # shows remaining ships table
+    if task_number == 9:  # stats option in menu has been selected
+        ta.draw_stats(language, screen)  # shows stats
     bu.refresh_buttons(task_number, orientation, language, zustand)  # updates buttons' writings
     bu.draw_buttons(screen)  # displays buttons
     sl.refresh_slides(task_number)  # refreshes active of slides
     sl.draw_slides(screen, field_size)  # displays sliders on the GUI
+    pygame.display.flip()  # updates display to display displayed things
+
+
+def draw_ship_placement(zustand, language, background, resource_path, ship):
+    """
+    displays player's board and player's ships
+
+    :param zustand: str; ingame/placement
+    :param language: str; language all texts are currently dispalyed in
+    :param background: str; currently used background picture
+    :param resource_path: Func; returns a resource path to a relative path
+    :param ship: list[list[Ship, ...], ...]; list containing all ships
+    """
+    screen = g_screen
+    field_size, orientation = get_window_size(global_width, global_height)[2:]
+    _draw_background(screen, background, resource_path, language)  # displays background
+    _draw_ships(ship, screen, field_size, orientation, zustand)  # displays ships
+    pf.draw_playfield(screen, field_size, zustand, True)  # displays board
+    bu.draw_placement_buttons(screen)  # displays button
     pygame.display.flip()  # updates display to display displayed things
 
 
@@ -274,10 +301,10 @@ def draw_end(winner, resource_path, language):
         field_size = get_window_size(global_width, global_height)[2]  # gets size of one virtual field
         screen.fill((0, 0, 0))  # draws a black background
         if winner == 0:  # player has won
-            screen.blit(pygame.font.SysFont(None, int(field_size * 3)).render("You won!!!", False, (0, 125, 0)),
+            screen.blit(pygame.font.SysFont(None, int(field_size * 3)).render("You won!!!", False, DARKGREEN),
                         (field_size * 3, field_size * 5))  # shows "You won!!!" in green
         elif winner == 1:  # enemy has won
-            screen.blit(pygame.font.SysFont(None, int(field_size * 3)).render("You lost :´(", False, (125, 0, 0)),
+            screen.blit(pygame.font.SysFont(None, int(field_size * 3)).render("You lost :´(", False, DARKRED),
                         (field_size * 3, field_size * 5))  # shows "You lost :´(" in red
         pygame.display.flip()  # updates the window
     time.sleep(3)  # waits 3 seconds
@@ -361,6 +388,16 @@ def get_request_buttons():
     return bu.get_request_buttons()
 
 
+def get_placement_buttons():
+    """
+    returns placement buttons
+    used to determine a click on them while placement loop is running
+
+    :return: list[Button, Button]; list with placement buttons
+    """
+    return bu.get_placement_buttons()
+
+
 def get_slides():
     """"
     :return: list[Slider, Slider]; lsit with volume sliders, used to determine change to volume
@@ -368,11 +405,12 @@ def get_slides():
     return sl.get_sliders()
 
 
-def save_playfield(resource_path, language):
+def save_playfield(resource_path, language, add_dir):
     """
     saves the playfield, used to continue games after closing the program
 
     :param resource_path: Func; returns the resource path to a relative path
     :param language: language all texts are currently displayed in
+    :param add_dir: str; additional directory where loaded game is found
     """
-    pf.save_playfield(resource_path, language)
+    pf.save_playfield(resource_path, language, add_dir)
