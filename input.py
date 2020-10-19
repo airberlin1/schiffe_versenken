@@ -1,14 +1,8 @@
-# commented english
 # module input, used to convert an action into an input the program can deal with
 from pygame.locals import *
+from constants import LETTERS, END_BUTTON_DICT
 
-# ------
-# important variables
-# a few letters of the alphabet, used to convert letters into numbers
-letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
-
-# dicitonary used to convert keys into letters and numbers
-key_dict_letters_digits = {
+KEY_DICT_LETTERS_DIGITS = {
     K_a: "A",
     K_b: "B",
     K_c: "C",
@@ -30,15 +24,8 @@ key_dict_letters_digits = {
     K_9: 9, K_KP9: 9,
     K_0: 0, K_KP0: 0
 }
-# dictionary used to convert the order of end_buttons into their use
-end_button_dic = {
-    0: "end",
-    1: "settings",
-    2: "save"
-}
 
 
-# ------
 # initialising the modul
 def __init__input():
     """
@@ -145,7 +132,7 @@ def get_button_ingame_mouse(xcoord, ycoord, field_size, end_buttons):
         for boundaries in button_boundaries:  # goes through the buttons
             # checks, whether that button was clicked
             if boundaries[0][0] <= square[0] <= boundaries[0][1] and boundaries[1][0] <= square[1] <= boundaries[1][1]:
-                return "button", end_button_dic[count]  # returns that button
+                return "button", END_BUTTON_DICT[count]  # returns that button
             count += 1  # adds 1
 
     return False  # returns False if no button was clicked
@@ -169,13 +156,8 @@ def _get_square_keyboard():
     x_coord, y_coord = -1, -1  # declares values for the square, that will get changed when the input is valid
 
     if key_count >= 2:  # checks, whether at least two keys got pressed, because two are needed for a valid input
-        if key_list[0] in letters:  # checks, whether the letter input is valid
-            # converts the pressed letter into a x-coordinate
-            x_coord = 0
-            for letter in letters:
-                if letter == key_list[0]:
-                    break
-                x_coord += 1
+        if key_list[0] in LETTERS:  # checks, whether the letter input is valid
+            x_coord = LETTERS.index(key_list[0])  # converts the pressed letter into a x-coordinate
 
         if key_count >= 3:  # checks how many keys were pressed
             # calculates the y-coordinate and ignores all keys past the third
@@ -193,8 +175,8 @@ def _get_keyboard_input(key):
     :param key: pressed  key on keyboard
     :return: pressed number or letter
     """
-    if key in key_dict_letters_digits:  # checks, whether the key is used to select a field
-        return key_dict_letters_digits[key]  # returns the pressed number or letter
+    if key in KEY_DICT_LETTERS_DIGITS:  # checks, whether the key is used to select a field
+        return KEY_DICT_LETTERS_DIGITS[key]  # returns the pressed number or letter
     else:
         return None  # returns None, so that it can be handeled as somethign that is not a valid key
 
