@@ -1,16 +1,7 @@
 """slider module containing two functioning slider objects controlling volume"""
 import pygame
-from writing import Writing
-
-# ------
-# colors used for sliders
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-YELLOW = (255, 255, 0)
-BLUE = (50, 50, 255)
-GREY = (200, 200, 200)
-ORANGE = (200, 100, 50)
-TRANS = (1, 1, 1)
+from writing import Writing  # used to display texts
+from constants import WHITE, BLACK, YELLOW, BLUE, GREY, ORANGE, TRANS  # colors used to display sliders
 
 
 # ------
