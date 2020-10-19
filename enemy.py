@@ -1,45 +1,23 @@
-# import fixed
-import random as rd
-import enemy_medium as em
-import save
-import chat
-# TODO Modul sortieren
-# TODO kommentieren
+"""enemy module creating, managing and monitoring enemy's moves"""
+
+# ------
+# neccessary imports
+import random as rd  # randomize moves on easy difficulty
+import enemy_medium as em  # creates moves on medium and hard difficulty
+import save  # used to load and save moves between app starts
+import chat  # used to display eror messages
 
 
-def get_play_list():
-    return ps.get_play_list_ps()
-
-
-def __init__enemy(load, language, resource_path, length_x, length_y, ship_coordinates, difficulty, ships):
-    global hit_list
-    global known_hits
-    global shots
-    if load:
-        try:
-            shots = save.load('lis', 'enemy', 1, resource_path)
-        except FileNotFoundError:
-            chat.add_missing_message("enemy1.lis", resource_path("saves/"), language)
-            return True
-    else:
-        # initialisiert den Gegner und eine Kontrollliste, um doppelte Eingaben zu vermeiden
-
-        shots = [[2, 2]]
-
-        hit_list = []
-        for x in range(10):
-            hit_list.append([])
-            for y in range(10):
-                hit_list[x].append(0)
-
-        known_hits = []
-        for x in range(10):
-            known_hits.append([])
-            for y in range(10):
-                known_hits[x].append(0)
-
-        create_moves_enemy(difficulty=difficulty, field_count=(length_x, length_y), ship_coordinates=ship_coordinates,
-                           ships=ships)
+# ------
+# initialization
+def reset_hit_list(field_count):
+    """
+    returns a new hit list used to avoid doubling moves
+    :param field_count: list[int, int]; board's size
+    :return: list[list[0, ...], ...]; new hit_list
+    """
+    hit_list = [[False for _ in range(field_count[1])] for _ in range(field_count[0])]
+    return hit_list
 
 
 def _enemy_easy(field_count):
@@ -54,12 +32,15 @@ def _enemy_easy(field_count):
 
     :param field_count: list[int, int]; size of one playfield in small fields
     """
+    global shots
+    hit_list = reset_hit_list(field_count)  # creates list to avoid doubling moves
+
     field_count_x, field_count_y = field_count
     xcoord, ycoord = ("x", "y")
 
-    while shots.__len__() < (field_count_y * field_count_x + 1):
+    while shots.__len__() < (field_count_y * field_count_x + 1):  # enough shots to cover the whole board are created
         field_selected = False
-        # selects a random field, that wasn't selected before
+        # selects a random field, that has npt been selected before
         while not field_selected:
             field_selected = True
             # selects a random field
@@ -83,27 +64,65 @@ def _enemy_impossible(ship_coordinates):
 
     :param ship_coordinates: list[list[int, int], list, ...]; coordinates of allied ship parts
     """
+    global shots
     for ship_coordinate in ship_coordinates:  # geos through the coordiantes a ship is placed on
-        hit_list[ship_coordinate[0]][ship_coordinate[1]] = 1  # refreshes checklist
-        shots.append([ship_coordinate[0], ship_coordinate[1]])  # # adds that field to the shots list
+        shots.append([ship_coordinate[0], ship_coordinate[1]])  # adds that field to the shots list
 
 
-def create_moves_enemy(difficulty, field_count, ship_coordinates, ships):
-    """"""
+def _create_moves_enemy(difficulty, field_count, ship_coordinates, ships):
+    """
+    creates enemy's moves
+
+    :param difficulty: str; difficulty the palyer has chosen
+    :param field_count: list[int, int]; size of the board
+    :param ship_coordinates: list[list[int, int], list, ...]; list with all coordiantes inhabiting a ship
+    :param ships: list[list[list[Ship, ...], ...], ...]; list containing all ships
+    """
     global shots
     if difficulty == "easy":
-        _enemy_easy(field_count)
+        _enemy_easy(field_count)  # creates random moves
 
-    elif difficulty == "medium":
-        shots += em.enemy_medium(ships, field_count)
-
-    elif difficulty == "hard":
-        shots += em.enemy_hard()  # TODO implement hard enemy
+    elif difficulty == "medium" or difficulty == "hard":
+        shots += em.enemy_mediumhard(ships, field_count, reset_hit_list, difficulty)  # creates moves less random
 
     elif difficulty == "impossible":
-        _enemy_impossible(ship_coordinates)
+        _enemy_impossible(ship_coordinates)  # creates moves that hit everytime
 
 
+def __init__enemy(load, language, resource_path, length_x, length_y, ship_coordinates=[[[0]]], difficulty="easy",
+                  ships=[[[0]]], add_dir=""):
+    """
+    initializes enemy module and enemy's move
+
+    :param load: bool; game is loaded and not newly created
+    :param language: str; language all texts are currently displayed in
+    :param resource_path: Func; returns a resoucre path to a relative path
+    :param length_x: int; board size in x direction
+    :param length_y: int; board size in y direction
+    :param ship_coordinates: list[list[int, int], ...]; list with all coordiantes inhabiting a ship
+    :param difficulty: str; easy/medium/hard/impossible
+    :param ships: list[list[list[Ship, ...], ...], ...]; list containing all ships
+    :param add_dir: str; additional directory used to save game sfrom different difficulties
+    :return: bool or None; loading failed
+    """
+    global shots
+    if load:  # game is laoded
+        try:
+            shots = save.load('lis', 'enemy', 1, resource_path, add_dir)  # shots are loaded
+        except FileNotFoundError:
+            chat.add_missing_message("enemy1.lis", resource_path("saves/"), language)  # adds message to chat
+            return True  # interrupts loading and creates new game
+
+    else:  # game is newly created
+
+        shots = [[2, 2]]  # sets a start value so that in game function can be more easily readable
+
+        _create_moves_enemy(difficulty=difficulty, field_count=(length_x, length_y), ship_coordinates=ship_coordinates,
+                            ships=ships)  # creates enemy's moves
+
+
+# ------
+# in game
 def get_enemy_move():
     """
     returns the next move of the enemy
@@ -124,19 +143,17 @@ def get_enemy_move():
     return oldx, oldy, shot  # returns both shots
 
 
-def get_random_field(length_x, length_y):
-    rand_field = ps.add_random_target(length_x, length_y)
-    return rand_field
+# ------
+# between games (technically in game)
+def save_enemy(resource_path, language, add_dir):
+    """
+    saves enemy's remaining moves
 
-
-def get_hit_list_enemy():
-    # gibt die Liste der bereits beschossenen Felder zurueck
-    return hit_list
-
-
-def save_enemy(resource_path, language):
-    # saves remaining enemy moves for this game
+    :param resource_path: Func; returns a resource path to a relative path
+    :param language: str; language all texts are currently displayes in
+    :param add_dir: str; additional directory used to save game sfrom different difficulties
+    """
     try:
-        save.save(shots, 'lis', 'enemy', 1, resource_path)
+        save.save(shots, 'lis', 'enemy', 1, resource_path, add_dir)  # saves reamining shots of the enemy
     except FileNotFoundError:
-        chat.add_missing_message("", resource_path("saves/"), language, False)
+        chat.add_missing_message("", resource_path("saves/"), language, False)  # displays error message
