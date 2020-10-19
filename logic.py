@@ -3,11 +3,12 @@ import chat
 import visual_output as vo  # GUI
 import pygame  # used to recieve player input and create GUI
 import save  # used to save/load settings
-import os  # used to open pdf
-
+import webbrowser  # used to open help
+from constants import DIFFICULTIES, STATS
 from pygame.locals import *  # used for pygame constants such as RESIZABLE for window settings
 from playfield import hit_small_field  # lets the game hit a small field
 # TODO Regeln aendern ermoeglichen
+# TODO display currently selected settings differently
 
 
 def _get_button_return(x_coord, y_coord, inputtype, resource_path, clicked_field="string"):
@@ -27,7 +28,7 @@ def _get_button_return(x_coord, y_coord, inputtype, resource_path, clicked_field
         # returns the new clicked field, whether a field was hit, and the hit field
         return -1, -1, True, x_coord, y_coord
 
-    else:
+    elif zustand != "placement":
         hit_small_field(1, x_coord, y_coord, resource_path, sound_volume, get_language())  # clicks a new field
         # returns the new clicked field, whether a field was hit, and the hit field
         return x_coord, y_coord, False, -1, -1
@@ -53,7 +54,7 @@ def _get_button_return_ingame(button, inputtype, resource_path, clicked_field="s
             # returns the new clicked field, whether a field was hit, and the hit field
             return _get_button_return(button[1], button[2], inputtype, resource_path, clicked_field)
 
-        elif str(button[0]) == "button":
+        elif str(button[0]) == "button" and zustand != "placement":
             # checks type of button
             if str(button[1]) == "end":
                 return "end"  # ends the game
@@ -61,6 +62,12 @@ def _get_button_return_ingame(button, inputtype, resource_path, clicked_field="s
                 return "settings"
             elif str(button[1]) == "save":
                 save_game()
+
+        elif str(button[0]) == "button":
+            if str(button[1]) == "end":
+                return "start"
+            elif str(button[1]) == "settings":
+                return "end"
 
 
 def _play_click_sound(resource_path):
@@ -143,7 +150,6 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, resource_path):
     :param ycoord: int; y-Koordiante des Mausklicks
     :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     :param start_buttons: list[Button, Button, ...]; Liste mit den Startknoepfen
-    :param end: Function; beendet das Spiel
     :param resource_path: Func; returns resource path to a relative path
     """
     _play_click_sound(resource_path)
@@ -153,7 +159,8 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, resource_path):
     if aufgabe == "main" and zustand == "start":  # Aufgabe ueberpruefen, dementsprechend handeln
         # ueberprueft die Nummer des Knopfes
         if button == 1:
-            set_game_start()  # Spiel startet
+            set_zustand("request")  # Spiel startet
+            set_aufgabe("ingame")
         elif button == 2:
             goto_difficulty()  # Schwierigkeit kann geaendert werden
         elif button == 3:
@@ -161,10 +168,7 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, resource_path):
         elif button == 4:
             goto_choose_rules()  # Regeln koennen geaendert werden
         elif button == 5:
-            try:
-                os.startfile(resource_path('assets/help.pdf'))  # opens the pdf that explains the game
-            except FileNotFoundError:
-                chat.add_missing_message("help.pdf", resource_path('assets/'), get_language())
+            goto_other()
         elif button == 6:
             return "end"
 
@@ -176,12 +180,9 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, resource_path):
         elif button == 3:
             goto_choose_rules()  # Regeln koennen geaendert werden
         elif button == 4:
-            try:
-                os.startfile(resource_path('assets/help.pdf'))  # opens the pdf that explains the game
-            except FileNotFoundError:
-                chat.add_missing_message("help.pdf", resource_path('assets/'), get_language())
-        elif button == 5:
             goto_volume()
+        elif button == 5:
+            goto_other()
         elif button == 6:
             return "end"
 
@@ -192,8 +193,10 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, resource_path):
         elif button == 2:
             set_difficulty("medium", resource_path)
         elif button == 3:
-            set_difficulty("impossible", resource_path)
+            set_difficulty("hard", resource_path)
         elif button == 4:
+            set_difficulty("impossible", resource_path)
+        elif button == 5:
             set_aufgabe("main")
 
     elif aufgabe == "videosettings":
@@ -250,17 +253,48 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, resource_path):
         elif button == 3:
             set_theme(resource_path, 3)
         elif button == 4:
-            set_aufgabe('main')
+            set_aufgabe('videosettings')
+
+    elif aufgabe == "other" and zustand == "start":
+        if button == 1:
+            url = "https://github.com/airberlin1/schiffe_versenken/tree/master/help/"
+            webbrowser.open(url)
+        elif button == 2:
+            set_aufgabe("stats")
+        elif button == 3:
+            set_aufgabe("volume")
+        elif button == 4:
+            set_aufgabe("main")
+
+    elif aufgabe == "other" and zustand == "settings":
+        if button == 1:
+            url = "https://github.com/airberlin1/schiffe_versenken/tree/master/help/"
+            webbrowser.open_new_tab(url)
+        elif button == 2:
+            set_aufgabe("stats")
+        elif button == 3:
+            set_aufgabe("main")
+
+    elif aufgabe == "stats" or aufgabe == "statistics":
+        if button == 1:
+            set_aufgabe("other")
+        elif button == 2:
+            reset_stats(resource_path)
 
     return button - 1
 
 
 def get_task_number():
     """gibt je nach Aufgabe die dazu passende Nummer zurück"""
-    task_list = ["main", "difficulty", "videosettings", "background", "language", "help", "ingame", "volume", "theme"]
+    task_list = ["main", "difficulty", "videosettings", "background", "language", "other", "ingame", "volume", "theme",
+                 "stats"]
     task_number = 0
+    if aufgabe == "statistics":
+        l_aufgabe = "stats"
+    else:
+        l_aufgabe = aufgabe
     for task in task_list:
-        if aufgabe == task:
+        if l_aufgabe == task:
             return task_number
         task_number += 1
     return -1
@@ -369,6 +403,10 @@ def goto_videosettings():
 def goto_help():
     # oeffnet neues Fenster
     set_aufgabe("help")
+
+
+def goto_other():
+    set_aufgabe("other")
 
 
 def set_zustand(now):
@@ -554,6 +592,12 @@ def __init__logic(resource_path):
     # return
 
 
+def reset_stats(resource_path):
+    for diff in DIFFICULTIES:
+        for stat in STATS:
+            save.save(0, "int", stat, 1, resource_path, "stats/" + diff)
+
+
 def get_but_count(aufgab):
     if aufgab == "main":
         return 6
@@ -565,28 +609,4 @@ def get_but_count(aufgab):
         return 1
     else:
         return 30
-
-
-def _check_player_change(hit, ship_count, check_ship_pos, ship):
-    # TODO andere Regeln ermoeglichen
-    """in Bearbeitung, wichtig bei Änderung der Regeln"""
-    while True:
-        if rule == 1:
-            hi = 1
-        elif rule == 2:
-            hi = 1
-        elif rule == 3:
-            hi = ship_count
-        else:
-            hi = 0
-        x = 0
-        while x < hi:
-            x += 1
-            if rule == 2:
-                # bei Wechsel des Spielers nach nicht getroffenem Schiff, wird ueberprueft, ob Schiff getroffen und
-                # dementsprechend Schleife beendet oder auch nicht
-                for x in range(10):
-                    if check_ship_pos(ship[0][x], hit)[0]:
-                        hi += 1
-            yield
-        # set_player(1)
+    
