@@ -11,7 +11,7 @@ import pygame
 # -------
 # classes "Button" and "ButtonWriting"
 class Button:
-    """Knoepfe auf der Oberflaeche"""
+    """buttons without that cannot be used by themselves"""
 
     def __init__(self, location_top_left, size_x, size_y, field_size_x, field_size_y, field_coords, intention,
                  liste, active, color_local, number):
