@@ -4,28 +4,8 @@
 # imports pygame and the writing to display buttons and writings
 from writing import Writing
 from translation import get_dict
+from constants import RED, DARKBLUE, DARKERGREEN, INTENTIONSSETTINGS, INTENTIONSSTART
 import pygame
-
-
-# -------
-# list with buttons' contents
-# one whole row is shown simultaniously from top to bottom
-intention_list = [
-        ["Start", "Leicht", "Vollbild", "Ozean", "Deutsch", "Zurueck", None, "Zurueck", "Normal"],
-        ["Schwierigkeit", "Mittel", "Fenster", "Weltall", "English", None, None, None, "Kontrast"],
-        ["Bildeinstellungen", "Unmoeglich", "Hintergrund", "Gezeichnet", "Latinum", None, None, None, "Weihnachten"],
-        ["Sprache", "Zurueck", "Theme", "Zurueck", "Zurueck", None, None, None, "Zurueck"],
-        ["Hilfe", None, "Zurueck"],
-        ["Beenden"]
-]
-intention_list_settings = [
-    ["Weiter",            None, "Vollbild",    "Ozean",      "Deutsch", "Zurueck", None, "Zurueck", "Normal"],
-    ["Bildeinstellungen", None, "Fenster",     "Weltall",    "English", None, None, None, "Kontrast"],
-    ["Sprache",           None, "Hintergrund", "Gezeichnet", "Latinum", None, None, None, "Weihnachten"],
-    ["Hilfe",             None, "Theme",     "Zurueck",    "Zurueck", None, None, None, "Zurueck"],
-    ["Lautstärke",  None, "Zurueck"],
-    ["Aufgeben"]
-]
 
 
 # -------
@@ -114,10 +94,10 @@ class Button:
                 # updates buttons intention
                 if zustand == "start":  # program is at start
                     # gets intention from list
-                    self.intention = intention_list[self.number][task_number]
+                    self.intention = INTENTIONSSTART[self.number][task_number]
                 elif zustand == "settings":  # program is in settings
                     # gets intention from list
-                    self.intention = intention_list_settings[self.number][task_number]
+                    self.intention = INTENTIONSSETTINGS[self.number][task_number]
                 if self.intention is None:  # no intention for this button at this moment
                     self.active = False  # button is not displayed
                 else:
@@ -216,7 +196,7 @@ def _create_start_buttons(field_size, button_bg_color):
     :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
     :param button_bg_color: tup(int, int, int); background color of buttons, RGB
     """
-    # creates lsit later containing all in game buttons
+    # creates list later containing all in game buttons
     global start_buttons
     start_buttons = []
     loc_tl = [int(3 / 2 * field_size), int(3 / 2 * field_size)]  # sets top left corner for first button
@@ -291,11 +271,11 @@ def _create_end_buttons(field_size):
         field_coords = _get_field_coords_end_b(i)  # gets coordiantes on which the button can be clicked
         # sets button's background color according to usage
         if i < 2:  # surrender button
-            color = (170, 0, 0)
+            color = RED
         elif i < 4:  # settings button
-            color = (0, 50, 0)
+            color = DARKERGREEN
         else:  # save button
-            color = (0, 0, 100)
+            color = DARKBLUE
         # creates button
         end_buttons.append(0)
         end_buttons[i] = Button(loc_tl, size_x, size_y, field_count_x, 2, field_coords, "Beenden", "end_buttons",
@@ -415,15 +395,19 @@ def create_request_buttons(field_size, bg_color, writing_color, language):
     global button_writings_request
     request_buttons = []  # creates a list that later holds the request buttons
     button_writings_request = []  # creates a list that later holds the writings to the request buttons
-    for i in range(2):
+    for i in range(3):
         # determines the correct intention for the button
         intention = 'new' if i == 0 else 'load'
+        intention = 'random' if i == 1 else intention
         # calculates button's size
         size_x = field_size * 10
         size_y = field_size * 2
         # determines the correct dict to show request in correct language
         lang_dict = get_dict(language, "button")
-        if i:
+        if i == 2:
+            location_top_left = [23 / 2 * field_size, 21 / 2 * field_size]
+            start_coord = [10, 9]
+        elif i == 1:
             location_top_left = [35 / 2 * field_size, 15 / 2 * field_size]
             start_coord = [16, 6]
         else:
@@ -433,14 +417,71 @@ def create_request_buttons(field_size, bg_color, writing_color, language):
 
         # creates a button
         request_buttons.append(Button(size_x=size_x, size_y=size_y, number=i + 200, location_top_left=location_top_left,
-                                      liste='request_buttons', intention=intention, field_size_x=8, field_size_y=2,
+                                      liste='request_buttons', intention=intention, field_size_x=10, field_size_y=2,
                                       field_coords=_get_field_coords_from_start(xcoord_count, start_coord),
-                                      color_local=bg_color, active=False))
+                                      color_local=bg_color, active=True))
         # creates a writing to the button
         button_writings_request.append(ButtonWriting(top_left_corner=_get_center_writing(request_buttons[i]),
                                                      font=_get_font_button(field_size),
                                                      content=lang_dict[intention], color_local=writing_color,
-                                                     button=request_buttons[i], background=None, active=False))
+                                                     button=request_buttons[i], background=None, active=True))
+
+
+def _get_loc_top_left_placement_b(button_number):
+    """
+    returns the top left field coordinate of the placement button
+    :param button_number: int; placement button's number
+    :return: list[int, int]; coordinate of the button's top left corner
+    """
+    if button_number == 0:
+        return 35 / 2, 7 / 2  # placement button that starts the game
+
+    elif button_number == 1:
+        return 35 / 2, 13 / 2  # placement button that brings program back to main menu
+
+
+def _get_field_coords_placement_buttons(button_number):
+    """
+    returns a list with a placement button's coordiantes.
+    This list than holds all the coordinates on which the button can be clicked
+    :param button_number: int; placement button's number
+    :return: list[list[int, int], list[int, int], ...]; coordiantes the button is on
+    """
+    # calculates first coordinate
+    start_coord = list(_get_loc_top_left_placement_b(button_number))
+    start_coord[0] -= 1.5
+    start_coord[1] -= 1.5
+    # returns the coordinates the button is on
+    return _get_field_coords_from_start(xcoord_count=8, start_coord=start_coord)
+
+
+def create_placement_buttons(field_size, language):
+    """
+    creates buttons visible in palyer controlled ship placing
+
+    :param field_size: float; size of a virtual field that is determined by the size of the window that inhabits the GUI
+    :param language: str; language the program currently displays all writing in
+    """
+    global placement_buttons
+    global placement_writings
+    placement_writings = []  # later holds writings on palcement buttons
+    placement_buttons = []  # later holds placement buttons
+    for i in range(2):
+        intention = "Abbrechen" if i else "Start"  # gets intention
+        size_x, size_y = (8 * field_size, 2 * field_size)  # calculates size
+        lang_dict = get_dict(language, "button")  # gets dictionary used to translate writing
+        location_top_left = [16, 2] if i else [16, 5]
+        # creates a button
+        placement_buttons.append(Button(size_x=size_x, size_y=size_y, number=i + 200,
+                                        location_top_left=location_top_left,
+                                        liste='placement_buttons', intention=intention, field_size_x=8, field_size_y=2,
+                                        field_coords=_get_field_coords_placement_buttons(i),
+                                        color_local=DARKBLUE, active=False))
+        # creates a writing to the button
+        placement_writings.append(ButtonWriting(top_left_corner=_get_center_writing(placement_buttons[i]),
+                                                font=_get_font_button(field_size),
+                                                content=lang_dict[intention], color_local=DARKERGREEN,
+                                                button=placement_buttons[i], background=None, active=False))
 
 
 # -------
@@ -461,6 +502,9 @@ def refresh_loc_buttons(field_size, orientation, zustand):
         if zustand == "ingame":  # refreshes button's visibility
             end_button.active = end_button.get_active_end_b(orientation)
         button_number += 1  # continues counting
+    if zustand == "placement":  # ships are placed by the user
+        for button in placement_buttons:  # goes through every placement button
+            button.change_loc_coords(field_size)  # updates its coordinates
 
 
 def refresh_loc_writing(field_size, zustand):
@@ -478,6 +522,9 @@ def refresh_loc_writing(field_size, zustand):
         if zustand == "ingame":
             button_writing.active = button_writing.button.active  # refreshes visibilty of end buttons' writings
         button_number += 1  # continues counting
+    if zustand == "placement":  # ships are placed by the user
+        for writing in placement_writings:  # goes through every placement writing
+            writing.change_loc_coords(field_size)  # updates its coordinates
 
 
 # -------
@@ -496,16 +543,20 @@ def _refresh_intention_buttons(task_number, orientation, zustand):
         button.change_intention(task_number, orientation, zustand)  # refreshes its intention
 
 
-def _refresh_content_b_writing(language):
+def _refresh_content_b_writing(language, zustand):
     """
     refreshes the writings' contents
 
     :param language: str; language the program is currently displaying its writing in
+    :param zustand: str; start/ingame/settings, what the program is currently doing
     """
     for onewriting in button_writings_start:  # goes through the start buttons' writings
         onewriting.refresh_content(language)  # refreshes the writing's content
     for onewriting in button_writings_end:  # goes through the in game buttons' writings
         onewriting.refresh_content(language)  # refreshes the writing's content
+    if zustand == "placement":  # ships are placed by the user
+        for onewriting in placement_writings:  # goes through the placement buttons' writings
+            onewriting.refresh_content(language)  # refreshes the writing's content
 
 
 def refresh_buttons(task_number, orientation, language, zustand):
@@ -517,7 +568,7 @@ def refresh_buttons(task_number, orientation, language, zustand):
     :param zustand: str; start/ingame/settings, what the program is currently doing
     """
     _refresh_intention_buttons(task_number, orientation, zustand)  # refreshes intention of buttons
-    _refresh_content_b_writing(language)  # refreshes the content shown on the buttons
+    _refresh_content_b_writing(language, zustand)  # refreshes the content shown on the buttons
 
 
 def change_button_color(writing_color, bg_color):
@@ -567,6 +618,17 @@ def draw_request_buttons(screen):
         onewriting.draw(screen, True)  # shows that writing
 
 
+def draw_placement_buttons(screen):
+    """
+    shows placement buttons on screen, used whe ships are palced by the plyer
+    :param screen: pygame.Surface; surface covering the whole screen
+    """
+    for button in placement_buttons:  # goes through every request button
+        button.draw(screen)  # shows that button
+    for onewriting in placement_writings:  # goes through every request button's writing
+        onewriting.draw(screen, True)  # shows that writing
+
+
 # ------
 # returns the buttons
 def get_buttons():
@@ -585,3 +647,13 @@ def get_request_buttons():
     :return: list[Button, Button]; list with request buttons
     """
     return request_buttons
+
+
+def get_placement_buttons():
+    """
+    returns placement buttons
+    used to determine a click on them while placement loop is running
+
+    :return: list[Button, Button]; list with placement buttons
+    """
+    return placement_buttons
