@@ -6,13 +6,14 @@ import chat
 
 # ------
 # initializes player
-def __init__player(load, resource_path, language):
+def __init__player(load, resource_path, language, add_dir):
     """
     initializes player and its required lists to check for doublicating inputs
 
     :param load: bool; whether the game is loaded or newly created
     :param resource_path: Func; returns the resource path to a relative path
     :param language: str; lnguage all texts are currently displayed in
+    :param add_dir: str; additional directory where loaded game is found
     """
     global hit_list
     global feld
@@ -22,17 +23,13 @@ def __init__player(load, resource_path, language):
     if load:
         # loads control for already targeted fields
         try:
-            hit_list = save.load('lis', 'player', 1, resource_path)
+            hit_list = save.load('lis', 'player', 1, resource_path, add_dir)
         except FileNotFoundError:
             chat.add_missing_message("player1.lis", resource_path("saves/"), language)
             return True
     else:
         # creates control for already targeted fields
-        hit_list = []
-        for x in range(10):
-            hit_list.append([])
-            for y in range(10):
-                hit_list[x].append(0)
+        hit_list = [[0 for _ in range(10)] for _ in range(10)]
 
 
 # ------
@@ -97,14 +94,15 @@ def get_last_click():
     return done_clicks[-1]
 
 
-def save_player(resource_path, language):
+def save_player(resource_path, language, add_dir):
     """
     saves the list required to continue a game without the player being able to click previously hit fields
 
     :param resource_path: Func; returns the resource path to a relative path
     :param language: str; langauge all texts are currently displayed in
+    :param add_dir: str; additional directory where loaded game is found
     """
     try:
-        save.save(hit_list, 'lis', 'player', 1, resource_path)  # saves the hit list [[0, 1,...], [], ...]
+        save.save(hit_list, 'lis', 'player', 1, resource_path, add_dir)  # saves the hit list [[0, 1,...], [], ...]
     except FileNotFoundError:
         chat.add_missing_message("", resource_path("saves/"), language, False)
