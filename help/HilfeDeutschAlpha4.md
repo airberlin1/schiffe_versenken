@@ -31,6 +31,9 @@ Das Spiel wird beendet. Bei einem erneuten Start des Programms werden die getrof
 # Menü im Spiel
 Dieses Menü hat die gleichen Einstellungsmöglichkeiten wie das Startmenü mit Ausnahme der Schwierigkeit.
 
+# Schiffe platzieren
+Um die Schiffe zu setzen, muessen sie an die gewuenschte Stelle auf dem Spielfeld gezogen werden. Dazu wird das Schiff mit der Maus angeklickt umd der Mausknopf wieder losgelassen, sobald sich das Schiff an der gewuenschten Stelle befindet. Werden vor dem Loslassen die Pfeiltasten nach links und rechts gedrueckt, kann das Schiff gedreht werden. Die Schiffe befinden sich zu Beginn zur rechten Seite des Spielfeldes.
+
 # Spiel
 Das Spiel kann sowohl mit der Maus, als auch mit der Tastatur gespielt werden. Mit der Maus muss ein gegnerischens Feld zweimal angeklickt werden, einaml, um e sauszuwählen, und ein weitewres Mal, um den Schuss zu bestätigen. 
 Mit der Tastatur auf der Tastatur einen Buchstaben drücken, der am Rand des Spielfeldes steht, dann ein Zahl zwischen 1 und 10 eingeben und dann mit Enter bestätigen.
