@@ -8,10 +8,24 @@ from constants import RED, DARKBLUE, DARKERGREEN, INTENTIONSSETTINGS, INTENTIONS
 import pygame
 
 
+settings_list = [
+    [None for _ in range(6)],  # main
+    ["easy", "medium", "hard", "impossible", None, None],  # difficulty
+    ["fullscreen", "windowed", None, None, None, None],  # videosettings
+    ["ocean", "space", "drawn", None, None, None],  # background
+    ["german", "english", "latin", None, None, None],  # language
+    [None for _ in range(6)],  # other
+    [None for _ in range(6)],  # ingame
+    [None for _ in range(6)],  # volume
+    [1, 2, 3, None, None, None],  # theme
+    [None for _ in range(6)],  # stats
+]
+
+
 # -------
 # classes "Button" and "ButtonWriting"
 class Button:
-    """buttons without that cannot be used by themselves"""
+    """buttons without text that cannot be used by themselves"""
 
     def __init__(self, location_top_left, size_x, size_y, field_size_x, field_size_y, field_coords, intention,
                  liste, active, color_local, number):
@@ -40,6 +54,7 @@ class Button:
         self.liste = liste
         self.color = color_local
         self.number = number
+        self.selected = False
 
     def change_loc_coords(self, field_size):
         """
@@ -118,7 +133,11 @@ class Button:
         displays button in the game window
         :param screen: Surface; surface covering whole window
         """
-        pygame.draw.rect(screen, self.color,
+        if self.selected:
+            used_color = (255 - self.color[0], 255 - self.color[1], 255 - self.color[2])
+        else:
+            used_color = self.color
+        pygame.draw.rect(screen, used_color,
                          (self.location_top_left[0], self.location_top_left[1], self.size_x, self.size_y), 0)
 
 
@@ -582,6 +601,23 @@ def change_button_color(writing_color, bg_color):
         button.color = bg_color  # refreshes its background color
     for local_writing in button_writings_start:  # goes through every start writing
         local_writing.color = writing_color  # refreshes its color
+
+
+def update_selected(task_number, settings):
+    """
+    updates selected settings, so that it gets displayed differently
+
+    :param task_number: int; number of active task
+    :param settings: list[str, ...]; list with all settings
+    """
+    setting = settings[task_number]
+    for i, button in enumerate(start_buttons):  # goes through start buttons
+        if settings_list[task_number][i] == setting:  # setting displayed on button is selected
+            button.selected = True
+            button_writings_start[i].selected = True
+        else:
+            button.selected = False
+            button_writings_start[i].selected = False
 
 
 # -------
