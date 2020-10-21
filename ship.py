@@ -223,6 +223,9 @@ class Ship:
                 if not 0 <= position[i] <= 9:  # ship is not on the board
                     self.set_default_pos(field_size, resource_path)  # sets the ship back to its default position
                     return
+        if not check_pos(self.identification_number, self.positions):  # ship collides with another ship
+            self.set_default_pos(field_size, resource_path)  # sets the ship back to its default position
+            return
         self.placed = True  # ship is placed
         self.update_rects(field_size)  # updates ship's pygame.Rect objects
 
@@ -357,63 +360,66 @@ def _set_default_pos(field_size, resource_path):
         one_ship.set_default_pos(field_size, resource_path)  # sets it to its default position
 
 
-def _set_rand_pos():
+def _set_rand_pos(only_enemy=False):
     """
     sets every ship to a random postion on the play field
 
     ships are located in global list ship as Ship
 
     used once in the beginning of the game
+
+    :param only_enemy: bool; only enemy's ships are placed rnadomly
     """
     # goes through every ship
     for player in range(2):
-        for one_ship_number in range(ship_count):
+        if player or not only_enemy:
+            for one_ship_number in range(ship_count):
 
-            testing = True  # sets testing to True, so that the loop trying to find a spot for that ship continues
-            while testing:
-                testing = False
-                # gets the direction the ship could be facing in and sets the first segment's location
-                direction = _get_rand_pos(player, one_ship_number, ship[player][one_ship_number].length)
-                x = 0  # sets x to 0 to circumvent var could not be assigned before reference
+                testing = True  # sets testing to True, so that the loop trying to find a spot for that ship continues
+                while testing:
+                    testing = False
+                    # gets the direction the ship could be facing in and sets the first segment's location
+                    direction = _get_rand_pos(player, one_ship_number, ship[player][one_ship_number].length)
+                    x = 0  # sets x to 0 to circumvent var could not be assigned before reference
 
-                if direction:  # checks, whether a direction was found
-                    positions = ship[player][one_ship_number].positions  # gets all positions of one ship
-                    length = ship[player][one_ship_number].length  # gets the length of that ship
+                    if direction:  # checks, whether a direction was found
+                        positions = ship[player][one_ship_number].positions  # gets all positions of one ship
+                        length = ship[player][one_ship_number].length  # gets the length of that ship
 
-                    for i in range(2):
-                        for j in range(length):
-                            if direction == 1:  # up
-                                # calculates the summand used to adjust the segments location after the first one
-                                x = -i * j
-                                directionn = 1
-                            elif direction == 2:  # right
-                                # calculates the summand used to adjust the segments location after the first one
-                                x = j - (i * j)
-                                directionn = 0
-                            elif direction == 3:  # down
-                                # calculates the summand used to adjust the segments location after the first one
-                                x = i * j
-                                directionn = 3
-                            elif direction == 4:  # left
-                                # calculates the summand used to adjust the segments location after the first one
-                                x = -(j - (i * j))
-                                directionn = 2
-                            if j > 0:
-                                # calculates the location based on the previously retrieved summand
-                                positions[j][i] = positions[0][i] + x
+                        for i in range(2):
+                            for j in range(length):
+                                if direction == 1:  # up
+                                    # calculates the summand used to adjust the segments location after the first one
+                                    x = -i * j
+                                    directionn = 1
+                                elif direction == 2:  # right
+                                    # calculates the summand used to adjust the segments location after the first one
+                                    x = j - (i * j)
+                                    directionn = 0
+                                elif direction == 3:  # down
+                                    # calculates the summand used to adjust the segments location after the first one
+                                    x = i * j
+                                    directionn = 3
+                                elif direction == 4:  # left
+                                    # calculates the summand used to adjust the segments location after the first one
+                                    x = -(j - (i * j))
+                                    directionn = 2
+                                if j > 0:
+                                    # calculates the location based on the previously retrieved summand
+                                    positions[j][i] = positions[0][i] + x
 
-                    # renews the ship's positions to the just created ones
-                    ship[player][one_ship_number].positions = positions
-                    ship[player][one_ship_number].direction = DIRECTIONS[directionn]
-                    if _is_used(one_ship_number, player):
+                        # renews the ship's positions to the just created ones
+                        ship[player][one_ship_number].positions = positions
+                        ship[player][one_ship_number].direction = DIRECTIONS[directionn]
+                        if _is_used(one_ship_number, player):
+                            # sets testing to True, so that the loop trying to find a spot for that ship continues
+                            testing = True
+                    else:
                         # sets testing to True, so that the loop trying to find a spot for that ship continues
                         testing = True
-                else:
-                    # sets testing to True, so that the loop trying to find a spot for that ship continues
-                    testing = True
 
 
-def set_ships(load, resource_path, language, add_dir, field_size, random_placement=True):
+def set_ships(load, resource_path, language, add_dir, field_size, random_placement=True, normal=False):
     """
     creates ships as Ship, in a way that the player's ships are in ship[0] and the enemy's ships are in ship[1]
     and places all ships on random locations on the playfield
@@ -427,6 +433,7 @@ def set_ships(load, resource_path, language, add_dir, field_size, random_placeme
     :param language: str; language all texts are currently displayed in
     :param add_dir: str; additional directory where loaded game is found
     :param field_size: float; size of one virtual field
+    :param normal: ships are set by the player
     :param random_placement: bool; ships are placed randomly and not by the player
     """
     global ship
@@ -436,6 +443,8 @@ def set_ships(load, resource_path, language, add_dir, field_size, random_placeme
         except FileNotFoundError:  # ships file has not been found
             chat.add_missing_message("ship1.lis", resource_path("saves/"), language)  # adds message to chat
             return True  # interrupts loading and creates new game
+    elif normal:
+        _set_rand_pos(True)
     else:  # game is newly created
         ship = []  # creates list later holding all ships
         for i in range(2):  # creates individual list for each palyer
@@ -629,14 +638,15 @@ def get_ship_count():
     return ship_count
 
 
-def get_ship_positions():
+def get_ship_positions(without=None):
     """
     gets all player's ships' coordinates
     :return: list[list[int, int, int], list, ...]
     """
     ship_coordinates = []
-    for x in ship[0]:  # goes through every player's ship
-        ship_coordinates += x.list_pos()  # adds its positions
+    for i, x in enumerate(ship[0]):  # goes through every player's ship
+        if i != without:
+            ship_coordinates += x.list_pos()  # adds its positions
     return ship_coordinates  # returns all positions
 
 
@@ -666,6 +676,20 @@ def get_hit_des():
         destroyed.append(0)
 
     return hit_des  # returns values
+
+
+def check_pos(ship_number, new_pos):
+    """
+    checks, whether new positions are on other ships' positions
+    :param ship_number: ship that is checkd
+    :param new_pos: positions of said ship
+    :return: bool; ship can be placed in these positions
+    """
+    pos = get_ship_positions(ship_number - 1)
+    for posi in new_pos:
+        if posi in pos:  # positions is already used
+            return False
+    return True
 
 
 # ------
