@@ -51,7 +51,7 @@ intention_dict_german = {  # to german
     "Theme": "Thema",
     "Normal": "Standard",
     "Kontrast": "Kontrast",
-    "Weihnachten": "Weihanchten",
+    "Weihnachten": "Weihnachten",
     "Lautstärke": "Ton",
     "Weiter": "Fortsetzen",
     "Start": "Start",
