@@ -39,3 +39,8 @@ Das Spiel kann sowohl mit der Maus, als auch mit der Tastatur gespielt werden. M
 Mit der Tastatur auf der Tastatur einen Buchstaben drücken, der am Rand des Spielfeldes steht, dann ein Zahl zwischen 1 und 10 eingeben und dann mit Enter bestätigen.
 Der Menü-Knopf öffnet das Menü im Spiel, der Aufgeben-Knopf beendet das Spiel sofort mit einer Niederlage. Dazu kann das Spiel gespeichert werden. Das Spiel kann dann an dieser Stelle fortgesetzt werden, wenn nach dem Start Gespeichertes Spiel ausgewählt wird. 
 Dazu werden in der rechten oberen Ecke Spielereignisse aufgeführt, und in einer Tabelle kann beobachtet werden, wer wie viele Schiffe übrig hat und welche.
+
+[Englisch](https://github.com/airberlin1/schiffe_versenken/blob/master/help/HelpEnglishAlpha4.md)
+[Latein, noch nicht fertiggestellt](https://github.com/airberlin1/schiffe_versenken/blob/master/help/AuxiliumLatinumAlpha4.md)
+
+[Ausfuehrbare Dateien(Windows)](https://drive.google.com/drive/folders/1n1nREr9wTsSy-yhHl3U8TFUes2SZ59io)
