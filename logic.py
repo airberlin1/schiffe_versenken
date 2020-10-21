@@ -7,8 +7,7 @@ import webbrowser  # used to open help
 from constants import DIFFICULTIES, STATS
 from pygame.locals import *  # used for pygame constants such as RESIZABLE for window settings
 from playfield import hit_small_field  # lets the game hit a small field
-# TODO Regeln aendern ermoeglichen
-# TODO display currently selected settings differently
+# TODO allow players to change rules, play different game modes
 
 
 def _get_button_return(x_coord, y_coord, inputtype, resource_path, clicked_field="string"):
@@ -203,11 +202,9 @@ def do_button_start(xcoord, ycoord, field_size, start_buttons, resource_path):
         # wenn das Hintergrundbild geaendert wird, dieses aendern, wenn Art der Oberflaeche geaendert
         # wird, diese veraendern
         if button == 1:
-            vo.set_windowed(pygame.FULLSCREEN, resource_path, get_language())
-            set_aufgabe("main")
+            set_windowed("full", resource_path)
         elif button == 2:
-            vo.set_windowed(pygame.RESIZABLE, resource_path, get_language())
-            set_aufgabe("main")
+            set_windowed("resizable", resource_path)
         elif button == 3:
             set_aufgabe("background")
         elif button == 4:
@@ -307,6 +304,17 @@ def get_task_number():
     # return
 
 
+def set_windowed(window_type, resource_path):
+    global win_type
+    if window_type == "resizable":
+        win_type = "windowed"
+        window_type = pygame.RESIZABLE
+    else:
+        win_type = "fullscreen"
+        window_type = pygame.FULLSCREEN
+    vo.set_windowed(window_type, resource_path, get_language())
+
+
 def set_background(bg, resource_path):
     global background
     background = bg
@@ -314,7 +322,6 @@ def set_background(bg, resource_path):
         save.save(background, "str", "logic", 1, resource_path, 'settings/')
     except FileNotFoundError:
         chat.add_missing_message("logic1.str", resource_path("saves/settings/"), get_language(), False)
-    set_aufgabe('main')
 
 
 def load_background(resource_path):
@@ -343,7 +350,6 @@ def set_rule(rules, resource_path):
         save.save(rule, "int", "logic", 6, resource_path, 'settings/')
     except FileNotFoundError:
         chat.add_missing_message("logic6.int", resource_path("saves/settings/"), get_language(), False)
-    set_aufgabe("main")
 
 
 def load_rule(resource_path):
@@ -373,7 +379,6 @@ def set_language(sprache, resource_path):
         save.save(language, "str", "logic", 5, resource_path, 'settings/')
     except FileNotFoundError:
         chat.add_missing_message("logic5.str", resource_path("saves/settings/"), get_language(), False)
-    set_aufgabe('main')
 
 
 def load_language(resource_path):
@@ -428,7 +433,6 @@ def set_difficulty(difficult, resource_path):
         save.save(difficulty, "str", "logic", 4, resource_path, 'settings/')
     except FileNotFoundError:
         chat.add_missing_message("logic4.str", resource_path("saves/settings/"), get_language(), False)
-    set_aufgabe("main")
 
 
 def load_difficulty(resource_path):
@@ -525,6 +529,8 @@ def set_theme(resource_path, number):
 
 
 def load_theme(resource_path, number):
+    global theme_number
+    theme_number = number
     set_writing_color_start(resource_path, number)
     set_background_color_start(resource_path, number)
 
@@ -567,15 +573,16 @@ def goto_difficulty():
 
 
 def __init__logic(resource_path):
+    global win_type
     global aufgabe
     global zustand
     load_language(resource_path)
     try:
-        theme_number = save.load('int', 'logic', 7, resource_path, 'settings/')
+        theme_num = save.load('int', 'logic', 7, resource_path, 'settings/')
     except FileNotFoundError:
         chat.add_missing_message("logic7.int", resource_path("saves/settings/"), get_language())
-        theme_number = 1
-    load_theme(resource_path, theme_number)
+        theme_num = 1
+    load_theme(resource_path, theme_num)
     load_background(resource_path)
     load_music_volume(resource_path)
     load_sound_volume(resource_path)
@@ -583,6 +590,7 @@ def __init__logic(resource_path):
     load_rule(resource_path)
     aufgabe = "main"
     zustand = "start"
+    win_type = "fullscreen"
     ip.__init__input()
 
 
@@ -609,4 +617,7 @@ def get_but_count(aufgab):
         return 1
     else:
         return 30
-    
+
+
+def get_settings():
+    return False, difficulty, win_type, background, get_language(), False, False, False, theme_number, False
