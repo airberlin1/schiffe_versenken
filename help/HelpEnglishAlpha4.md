@@ -33,6 +33,6 @@ The game can be played with the mouse as well as with a keyboard. To play with t
 The game can also be saved by pressing the save button.
 
 [German](https://github.com/airberlin1/schiffe_versenken/blob/master/help/HilfeDeutschAlpha4.md)
-[Latin, not zet finalized](https://github.com/airberlin1/schiffe_versenken/blob/master/help/AuxiliumLatinumAlpha4.md)
+  [Latin, not zet finalized](https://github.com/airberlin1/schiffe_versenken/blob/master/help/AuxiliumLatinumAlpha4.md)
 
 [Executables(Windows)](https://drive.google.com/drive/folders/1n1nREr9wTsSy-yhHl3U8TFUes2SZ59io)
