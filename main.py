@@ -1,5 +1,4 @@
 # main module
-# TODO game load faster by having defaults in saves?
 # TODO fix imports where possible
 # ------
 # import of neccessary modules
@@ -277,7 +276,7 @@ def video_resize(size, ship=[[[0]]], draw=True):
     if draw:
         # displays the menu on the game window
         vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), ship, resource_path,
-                       lg.get_task_number())
+                       lg.get_task_number(), lg.get_settings())
 
 
 def begins(begin, request, running, settings, win, again):
@@ -300,7 +299,7 @@ def begins(begin, request, running, settings, win, again):
     vo.refresh_loc_coords(vo.get_window_size(vo.get_screen_size()[0], vo.get_screen_size()[1])[2],
                           vo.get_window_size(vo.get_screen_size()[0], vo.get_screen_size()[1])[3], lg.get_zustand())
     vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), [[[0]]], resource_path,
-                   lg.get_task_number())
+                   lg.get_task_number(), lg.get_settings())
     num = 0
     other_num = 0
     while begin and lg.get_zustand() != "end":  # begin loop is running and settings can be changed
@@ -317,7 +316,7 @@ def begins(begin, request, running, settings, win, again):
                 # displays the menu on the game window
                 if lg.get_zustand() != "ingame":
                     vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), [[[0]]], resource_path,
-                                   lg.get_task_number())
+                                   lg.get_task_number(), lg.get_settings())
                 if lg.get_aufgabe() == "volume":  # checks whether a slider is on the screen
                     for slider in vo.get_slides():  # goes through every slider
                         try:
@@ -332,7 +331,7 @@ def begins(begin, request, running, settings, win, again):
                     slider.hit = False  # sets hit to false, so that it won't be moved
                 # displays the menu on the game window
                 vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), [[[0]]],
-                               resource_path, lg.get_task_number())
+                               resource_path, lg.get_task_number(), lg.get_settings())
 
             elif event.type == VIDEORESIZE:  # window size has been adjusted
                 video_resize(event.size)
@@ -346,7 +345,7 @@ def begins(begin, request, running, settings, win, again):
             update_statistics()
             # displays the statistics on the game window
             vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), [[[0]]],
-                           resource_path, lg.get_task_number())
+                           resource_path, lg.get_task_number(), lg.get_settings())
             lg.set_aufgabe("statistics")
 
         elif lg.get_aufgabe() == "volume":  # checks whether a slider is on the screen
@@ -356,7 +355,7 @@ def begins(begin, request, running, settings, win, again):
                     slider.move(vo.get_window_size(vo.get_screen_size()[0], vo.get_screen_size()[1])[2])
                     # displays the volume settings on the game window
                     vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), [[[0]]],
-                                   resource_path, lg.get_task_number())
+                                   resource_path, lg.get_task_number(), lg.get_settings())
 
         # continues counting, used to fix a bug instantly having a mousebuttonup event after mousebuttondown
         num += 1
@@ -560,6 +559,11 @@ def ship_placement(settings, again, running, win):
         clock.tick(40)  # limits frames/seconds to 40
 
     lg.set_zustand("ingame")  # starts game
+    en.__init__enemy(False, lg.get_language(), resource_path, 10, 10,
+                     ship_coordinates=sh.get_ship_positions(), ships=sh.get_ship(),
+                     difficulty=lg.get_difficulty(), add_dir=lg.get_difficulty() + "/")
+    sh.set_ships(False, resource_path, lg.get_language(), lg.get_difficulty() + "/",
+                 vo.get_window_size(vo.get_screen_size()[0], vo.get_screen_size()[1])[2], normal=True)
     return settings, again, running, win  # returns updated bools for loop management
 
 
@@ -596,7 +600,7 @@ def setting(settings, running, win, again):
                             pass
                 # displays the menu on the game window
                 vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), sh.get_ship(),
-                               resource_path, lg.get_task_number())
+                               resource_path, lg.get_task_number(), lg.get_settings())
                 other_num = num  # refreshes control number used to fix bug with sliders
 
             elif event.type == MOUSEBUTTONUP and num != other_num + 1:  # checks whether a mouse button was lifted
@@ -604,7 +608,7 @@ def setting(settings, running, win, again):
                     slider.hit = False  # sets hit to false, so that it won't be moved
                 # displays the menu on the game window
                 vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), sh.get_ship(),
-                               resource_path, lg.get_task_number())
+                               resource_path, lg.get_task_number(), lg.get_settings())
 
             elif event.type == VIDEORESIZE:  # window size has been adjusted
                 video_resize(event.size, sh.get_ship())
@@ -621,13 +625,13 @@ def setting(settings, running, win, again):
                     slider.move(vo.get_window_size(vo.get_screen_size()[0], vo.get_screen_size()[1])[2])
                     # displays the volume settings on the game window
                     vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), sh.get_ship(),
-                                   resource_path, lg.get_task_number())
+                                   resource_path, lg.get_task_number(), lg.get_settings())
 
         elif lg.get_aufgabe() == "stats":
             update_statistics()
             # displays the statistics on the game window
             vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), sh.get_ship(),
-                           resource_path, lg.get_task_number())
+                           resource_path, lg.get_task_number(), lg.get_settings())
             lg.set_aufgabe("statistics")
 
         if lg.get_zustand() == "ingame":  # game has been started
@@ -700,7 +704,7 @@ def game_loop(settings, running, win, again):
                 pl.set_angeklicktes_feld(xcoord, ycoord)  # refreshes clicked field
                 # displays the game on the game window
                 vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), sh.get_ship(),
-                               resource_path, lg.get_task_number())
+                               resource_path, lg.get_task_number(), lg.get_settings())
                 if running:
                     running, win = sh.check_ship_status()  # checks whether all ships of one player have been destroyed
 
@@ -722,7 +726,7 @@ def game_loop(settings, running, win, again):
 
                 # displays the game on the game window
                 vo.draw_screen(lg.get_zustand(), lg.get_background(), lg.get_language(), sh.get_ship(),
-                               resource_path, lg.get_task_number())
+                               resource_path, lg.get_task_number(), lg.get_settings())
                 running, win = sh.check_ship_status()  # checks whether all ships of one player have been destroyed
 
             elif event.type == VIDEORESIZE:  # checks whether the size of the window got adjusted
