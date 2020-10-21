@@ -25,6 +25,9 @@ Volume of the background music and sound effects can be adjusted.
 # In-game-menu
 Same options apart from chosing the difficulty.
 
+# Ship placement
+The ships can be placed on the board by dragging them to their new location. To turn the ships, use 'a' and 'd' or the arrow keys. Ships that have not yet been set appear to the right of the board.
+
 # In-game
 The game can be played with the mouse as well as with a keyboard. To play with the mouse, klick on a spot on the board to chose that spot, then click again to shoot it. With the keyboard, type a spot on the board, such as a2, and press enter/return. Note that there won't be any visual typing.
-Them game can also be saved by pressing the save button.
+The game can also be saved by pressing the save button.
