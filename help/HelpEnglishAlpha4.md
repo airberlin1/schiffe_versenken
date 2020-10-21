@@ -31,3 +31,8 @@ The ships can be placed on the board by dragging them to their new location. To 
 # In-game
 The game can be played with the mouse as well as with a keyboard. To play with the mouse, klick on a spot on the board to chose that spot, then click again to shoot it. With the keyboard, type a spot on the board, such as a2, and press enter/return. Note that there won't be any visual typing.
 The game can also be saved by pressing the save button.
+
+[German](https://github.com/airberlin1/schiffe_versenken/blob/master/help/HilfeDeutschAlpha4.md)
+[Latin, not zet finalized](https://github.com/airberlin1/schiffe_versenken/blob/master/help/AuxiliumLatinumAlpha4.md)
+
+[Executables(Windows)](https://drive.google.com/drive/folders/1n1nREr9wTsSy-yhHl3U8TFUes2SZ59io)
