@@ -17,6 +17,7 @@ class Writing:
         self.color = color
         self.top_left_corner = top_left_corner
         self.background = background
+        self.selected = False
 
     def draw(self, surface, centered=False):
         """
@@ -24,12 +25,16 @@ class Writing:
         :param surface: Surface; surface the writing is shown on
         :param centered: bool; show writing with top left corner as center, used in tables.Table
         """
+        if self.selected:
+            used_color = (255 - self.color[0], 255 - self.color[1], 255 - self.color[2])
+        else:
+            used_color = self.color
         # shows the writing
         if centered:
             # displays the writing centered with top left corner as center
-            rect = self.font.render(self.content, True, self.color,
+            rect = self.font.render(self.content, True, used_color,
                                     self.background).get_rect(center=self.top_left_corner)
-            surface.blit(self.font.render(self.content, True, self.color, self.background), rect)
+            surface.blit(self.font.render(self.content, True, used_color, self.background), rect)
         else:
             # displays the writing with top left corner as top left corner
-            surface.blit(self.font.render(self.content, True, self.color, self.background), self.top_left_corner)
+            surface.blit(self.font.render(self.content, True, used_color, self.background), self.top_left_corner)
