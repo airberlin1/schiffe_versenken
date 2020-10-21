@@ -219,7 +219,7 @@ def _draw_ships(ship, screen, field_size, orientation, zustand):
                 realship.draw(screen, field_size, orientation, small_field_count_x, small_field_count_y, zustand)
 
 
-def draw_screen(zustand, background, language, ship, resource_path, task_number=-1):
+def draw_screen(zustand, background, language, ship, resource_path, task_number=-1, settings=None):
     """
     displays all visible things on the game window
 
@@ -231,11 +231,13 @@ def draw_screen(zustand, background, language, ship, resource_path, task_number=
     :param ship: list[list[Ship, Ship, ...], list]; list with all ships on the board
     :param resource_path: Func; returns the full resource path when given a relative path
     :param task_number: int; number referring to curretn task, for example volume
+    :param settings: list[str, ...]; list with all settings
     """
     screen = g_screen
     screen.fill((0, 0, 0))  # fills the screen black
     field_size, orientation = get_window_size(global_width, global_height)[2:]  # gets values
-
+    if zustand == "start" or zustand == "settings":
+        bu.update_selected(task_number, settings)
     _draw_background(screen, background, resource_path, language)  # displays background
     _draw_ships(ship, screen, field_size, orientation, zustand)  # displays ships
     pf.draw_playfield(screen, field_size, zustand)  # displays board
